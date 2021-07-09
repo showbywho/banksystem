@@ -10,18 +10,18 @@
 		.container{
 			margin:15px auto;
 		}
-		
+
 		.comment-count{
 			margin-bottom: 10px;
 		}
-		
+
 	</style>
 	<script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
 </head>
 <body>
 	<div class="container">
 		<header>
-			<h1>留言板</h1>
+			<h1>留言板test</h1>
 		</header>
 		<div>
 			<div class="comment-count">
@@ -32,7 +32,7 @@
 				<button class="newre">新增留言</button>
 				<div class="newform"></div>
 			</div>
-			<?PHP foreach($comments as $c){ ?>
+			<?PHP foreach ($comments as $c) {?>
 			<blockquote>
 				<div data-id="<?php echo $c['id']; ?>" class="p"><p class="pc<?php echo $c['id']; ?>"><?PHP echo $c['contents']; ?></p></div>
 				<small>
@@ -43,24 +43,24 @@
 						<input id='listid' name='listid'  type='hidden' value='<?php echo $c['id']; ?>' required/>
 						<input class='button' name='commit' type='submit' value='刪除留言' />
 					</form>
-				</small>  
+				</small>
 				<div class="append<?php echo $c['id']; ?>"></div>
 				<div class="reply<?php echo $c['id']; ?>"></div>
 			</blockquote>
-			<?PHP } ?>
+			<?PHP }?>
 		</div>
 		<footer>
 			<a href="?p=1"><button>首頁</button></a>
-			<a href="?p=<?php echo (($page-1)==0)?1:($page-1); ?>"><button>上一頁</button></a>
-			<?PHP
-				for ($i=1;$i<=$totalPage;$i++) {
-					echo '<a href="?p='.$i.'"><button>'.$i.'</button></a>&nbsp';
-				}
-			?>
-			
-			<a href="?p=<?php echo ($page+1); ?>"><button>下一頁</button></a>
+			<a href="?p=<?php echo (($page - 1) == 0) ? 1 : ($page - 1); ?>"><button>上一頁</button></a>
+<?PHP
+for ($i = 1; $i <= $totalPage; $i++) {
+    echo '<a href="?p=' . $i . '"><button>' . $i . '</button></a>&nbsp';
+}
+?>
+
+			<a href="?p=<?php echo ($page + 1); ?>"><button>下一頁</button></a>
 			<a href="?p=<?php echo $totalPage; ?>"><button>頁尾</button></a>
-			
+
 		</footer>
 	</div>
 <script>
@@ -73,11 +73,11 @@
 				url		: "./controller/api.php?tag=see&pmid="+item,
 				dataType: "json",
 				success:function(res){
-					    
+
 					if(res!=""){
 						$.each(res, function(key,val) {
 							$(".append"+item).append("<blockquote><p>"+val.contents+"</p><small>,"+val.contents+","+val.contents+"</small></blockquote>")
-						}); 
+						});
 					}else{
 						$(".append"+item).append("<p>暫無回覆留言</p>")
 					}
@@ -88,7 +88,7 @@
 				}
 			});
 		}else{
-			$(".append"+item).empty();    
+			$(".append"+item).empty();
 		}
 	});
 
@@ -109,7 +109,7 @@
 						</div>`;
 			$(".reply"+item).append(form)
 		}else{
-			$(".reply"+item).empty();        
+			$(".reply"+item).empty();
 		}
 	});
 
@@ -128,11 +128,11 @@
 								<p><input class='button' name='commit' type='submit' value='送出' /></p>
 							</form>
 						</div>`;
-			$(".newform").append(form)	
+			$(".newform").append(form)
 		}else{
-			$(".newform").empty();  
+			$(".newform").empty();
 		}
-		
+
 	});
 
 	$(".del").click(function(){
@@ -149,9 +149,9 @@
 							<p><input class='button' name='commit' type='submit' value='送出' /></p>
 						</form>
 					</div>`;
-		$(".newform").append(form)	
-		
-		
+		$(".newform").append(form)
+
+
 	});
 
 	$(".p").dblclick(function(){
@@ -167,7 +167,7 @@
 							<p><input class='button' name='commit' type='submit' value='送出' /></p>
 						</form>
 					</div>`;
-		$(this).append(form)	
+		$(this).append(form)
 	});
 </script>
 </body>
