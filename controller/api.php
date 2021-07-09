@@ -1,5 +1,6 @@
 <?php
 require "../config/db.php";
+
 if ($_GET['tag'] == "see") {
     msgreplyGET($_GET['pmid']);
 } else if ($_GET['tag'] == "reply") {
@@ -32,7 +33,7 @@ function msgreplySEND($pmid)
     } else {
         $ip = $_SERVER["REMOTE_ADDR"];
     }
-    $PDO = new db;
+    $PDO = PDO();
     $input = array(':contents' => $contents, ':names' => $names, ':times' => date("Y-m-d H:i:s"), ':ip' => $ip, ':pmid' => $pmid);
     $sql = "INSERT INTO MESboard_reply (contents, onwer, times ,userIP ,tag) VALUES (:contents,:names,:times,:ip,:pmid)";
     $result = $PDO->prepare($sql);
@@ -65,9 +66,7 @@ function msgreplyNEW()
     $tag = $result->execute($input);
     if ($tag) {
         header("Location: http://localhost:8083/calvin_yang/");
-    } else {
-
-    }
+    } 
 
 }
 
