@@ -1,4 +1,3 @@
 <?php
-require "./config/db.php";
-require "./controller/homecontroller.php";
-require "./view/home.php";
+require './controller/homeController.php';
+require './view/home.php';

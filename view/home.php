@@ -34,24 +34,24 @@
 			</div>
 			<?PHP foreach ($comments as $c) {?>
 			<blockquote>
-				<div data-id="<?php echo $c['id']; ?>" class="p"><p class="pc<?php echo $c['id']; ?>"><?PHP echo $c['contents']; ?></p></div>
+				<div data-id="<?php echo $c->getId(); ?>" class="p"><p class="pc<?php echo $c->getId(); ?>"><?PHP echo $c->getContents(); ?></p></div>
 				<small>
-					<?PHP echo $c['onwer']; ?>, <?PHP echo $c['times']; ?>, <?PHP echo $c['userIP']; ?>
-					<button class="see" data-id="<?php echo $c['id']; ?>">查看回覆</button>,
-					<button class="rep" data-id="<?php echo $c['id']; ?>">回覆留言</button>,
+					<?PHP echo $c->getOwner(); ?>, <?PHP echo $c->getTimes(); ?>, <?PHP echo $c->getUserIp(); ?>
+					<button class="see" data-id="<?php echo $c->getId(); ?>">查看回覆</button>,
+					<button class="rep" data-id="<?php echo $c->getId(); ?>">回覆留言</button>,
 					<form action='./controller/api.php?tag=del' method='post' style="display:inline;">
-						<input id='listid' name='listid'  type='hidden' value='<?php echo $c['id']; ?>' required/>
+						<input id='listId' name='listId'  type='hidden' value='<?php echo $c->getId(); ?>' required/>
 						<input class='button' name='commit' type='submit' value='刪除留言' />
 					</form>
 				</small>
-				<div class="append<?php echo $c['id']; ?>"></div>
-				<div class="reply<?php echo $c['id']; ?>"></div>
+				<div class="append<?php echo $c->getId(); ?>"></div>
+				<div class="reply<?php echo $c->getId(); ?>"></div>
 			</blockquote>
 			<?PHP }?>
 		</div>
 		<footer>
 			<a href="?p=1"><button>首頁</button></a>
-			<a href="?p=<?php echo (($page - 1) == 0) ? 1 : ($page - 1); ?>"><button>上一頁</button></a>
+			<a href="?p=<?php echo (($page - 1) === 0) ? 1 : ($page - 1); ?>"><button>上一頁</button></a>
 <?PHP
 for ($i = 1; $i <= $totalPage; $i++) {
     echo '<a href="?p=' . $i . '"><button>' . $i . '</button></a>&nbsp';
@@ -64,22 +64,22 @@ for ($i = 1; $i <= $totalPage; $i++) {
 		</footer>
 	</div>
 <script>
-    $(".see").click(function(){
-		var item=$(this).data("id");
+    $('.see').click(function(){
+		var item = $(this).data('id');
 		var value = $('.append'+item).html();
 		if(!value){
 			$.ajax({
-				type	: "GET",
-				url		: "./controller/api.php?tag=see&pmid="+item,
-				dataType: "json",
+				type	: 'GET',
+				url		: './controller/api.php?tag=see&pmId='+item,
+				dataType: 'json',
 				success:function(res){
 
-					if(res!=""){
+					if(res!=''){
 						$.each(res, function(key,val) {
-							$(".append"+item).append("<blockquote><p>"+val.contents+"</p><small>,"+val.contents+","+val.contents+"</small></blockquote>")
+							$('.append'+item).append('<blockquote><p>'+val.contents+'</p><small>,'+val.contents+','+val.contents+'</small></blockquote>')
 						});
 					}else{
-						$(".append"+item).append("<p>暫無回覆留言</p>")
+						$('.append'+item).append('<p>暫無回覆留言</p>')
 					}
 
 					console.log(res)
@@ -88,16 +88,16 @@ for ($i = 1; $i <= $totalPage; $i++) {
 				}
 			});
 		}else{
-			$(".append"+item).empty();
+			$('.append'+item).empty();
 		}
 	});
 
-	$(".rep").click(function(){
-		var item=$(this).data("id");
+	$('.rep').click(function(){
+		var item=$(this).data('id');
 		var value = $('.reply'+item).html();
 		if(!value){
 			var form=	`<div id='signup-form'>
-							<form action='./controller/api.php?tag=reply&pmid=`+item+`' method='post'>
+							<form action='./controller/api.php?tag=reply&pmId=`+item+`' method='post'>
 								<p><label for='names'>暱稱</label>
 								<input id='names' name='names' size='30' type='text' required/>
 								</p>
@@ -107,18 +107,18 @@ for ($i = 1; $i <= $totalPage; $i++) {
 								<p><input class='button' name='commit' type='submit' value='送出' /></p>
 							</form>
 						</div>`;
-			$(".reply"+item).append(form)
+			$('.reply'+item).append(form)
 		}else{
-			$(".reply"+item).empty();
+			$('.reply'+item).empty();
 		}
 	});
 
-	$(".newre").click(function(){
+	$('.newre').click(function(){
 		var value = $('.newform').html();
 		if(!value){
-			var item=$(this).data("id");
+			var item=$(this).data('id');
 			var form=	`<div id='signup-form'>
-							<form action='./controller/api.php?tag=newre' method='post'>
+							<form action='./controller/api.php?tag=newMsg' method='post'>
 								<p><label for='names'>暱稱</label>
 								<input id='names' name='names' size='30' type='text' required/>
 								</p>
@@ -128,39 +128,20 @@ for ($i = 1; $i <= $totalPage; $i++) {
 								<p><input class='button' name='commit' type='submit' value='送出' /></p>
 							</form>
 						</div>`;
-			$(".newform").append(form)
+			$('.newform').append(form)
 		}else{
-			$(".newform").empty();
+			$('.newform').empty();
 		}
 
 	});
 
-	$(".del").click(function(){
-		var item=$(this).data("id");
-		var item=$(this).data("id");
-		var form=	`<div id='signup-form'>
-						<form action='./controller/api.php?tag=newre' method='post'>
-							<p><label for='names'>暱稱</label>
-							<input id='names' name='names' size='30' type='text' required/>
-							</p>
-							<p><label for='contents'>內容</label>
-							<input id='contents' name='contents' size='30' type='text' required/>
-							</p>
-							<p><input class='button' name='commit' type='submit' value='送出' /></p>
-						</form>
-					</div>`;
-		$(".newform").append(form)
-
-
-	});
-
-	$(".p").dblclick(function(){
-		var item=$(this).data("id");
+	$('.p').dblclick(function(){
+		var item=$(this).data('id');
 		var html=$(this);
-		var p=$(".pc"+item).html();
+		var p=$('.pc'+item).html();
 		html.empty();
 		var form=	`<div id='signup-form'>
-						<form action='./controller/api.php?tag=updatere&id=`+item+`' method='post'>
+						<form action='./controller/api.php?tag=updateMsg&id=`+item+`' method='post'>
 							<p>
 								<input id='contents' name='contents' size='30' type='text' value='`+p+`'/>
 							</p>
