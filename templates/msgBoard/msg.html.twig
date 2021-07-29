@@ -31,12 +31,34 @@
 				</div>
 				<div>
 					<button class="newre">新增留言</button>
-					<div class="newform"></div>
+					<div class="newform" style="display: none;">
+						<div>
+							<p>
+								<label for='newName'>暱稱</label>
+								<input id='newName' name='newName' size='30' type='text' />
+							</p>
+							<p>
+								<label for='newContents'>內容</label>
+								<input id='newContents' name='newContents' size='30' type='text' />
+							</p>
+							<p>
+								<button class='newSubmit'>留言送出</button>
+							</p>
+						</div>
+					</div>
 				</div>
 				{% for c in comments %}
 					<blockquote>
 						<div data-id="{{c.id}}" class="p">
-							<p class="pc{{c.id}}">{{c.contents}}</p>
+							<p class="pc{{c.id}}" style="display: block;">{{c.contents}}</p>
+							<div style="display: none;" class="pu{{c.id}}"  >
+								<p>
+									<input id='updateContents{{c.id}}' name='contents' size='30' type='text' value=''/>
+								</p>
+								<p>
+									<button class='updateSubmit' data-id="{{c.id}}">修改送出</button>
+								</p>
+							</div>
 						</div>
 						<small>
 							{{c.owner}},
@@ -44,13 +66,24 @@
 							{{c.userip}}
 							<button class="see" data-id="{{c.id}}">查看回覆</button>,
 							<button class="rep" data-id="{{c.id}}">回覆留言</button>,
-							<form action='./delMsgReply' method='post' style="display:inline;">
-								<input id='listId' name='listId' type='hidden' value='{{c.id}}' required/>
-								<input class='button' name='commit' type='submit' value='刪除留言'/>
-							</form>
+							<button class='delete' data-id='{{c.id}}'>刪除留言</button>
 						</small>
 						<div class="append{{c.id}}"></div>
-						<div class="reply{{c.id}}"></div>
+						<div class="replyform{{c.id}}"  style="display: none;">
+							<div>
+								<p>
+									<label for='names'>暱稱</label>
+									<input id='replyName{{c.id}}' name='names' size='30' type='text'>
+								</p>
+								<p>
+									<label for='contents'>內容</label>
+									<input id='replyContents{{c.id}}' name='contents' size='30' type='text'>
+								</p>
+								<p>
+									<button class='replySubmit' data-id="{{c.id}}">回覆送出</button>
+								</p>
+							</div>
+						</div>
 					</blockquote>
 				{% endfor %}
 			</div>
@@ -84,19 +117,16 @@
 				if (! value) {
 					$.ajax({
 						type: 'GET',
-						url: './getMsgReply/' + item,
+						url: './' + item,
 						dataType: 'json',
 						success: function (res) {
-						console.log(res);
-							if (res != '') {
-								$.each(res, function (key, val) {
-									$('.append' + item).append('<blockquote><p>' + val.contents + '</p><small>,' + val.contents + ',' + val.contents + '</small></blockquote>')
+							if (res.data != '') {
+								$.each(res.data, function (key, val) {
+									$('.append' + item).append('<blockquote><p>' + val.contents + '</p><small>' + val.owner + ',' + val.times + ',' + val.userIp + '</small></blockquote>')
 								});
 							} else {
 								$('.append' + item).append('<p>暫無回覆留言</p>')
 							}
-
-							console.log(res)
 						},
 						error: function (err) {
 							console.log(err)
@@ -107,62 +137,137 @@
 				}
 			});
 
+			$('.delete').click(function () {
+				var item = $(this).data('id');
+				$.ajax({
+					type: 'DELETE',
+					url: './'+item,
+					dataType: 'json',
+					success: function (res) {
+						if(res.status === 200){
+							alert(res.msg);
+							location.reload()
+						}
+					},
+					error: function (err) {
+						console.log(err)
+					}
+				});
+			});
+
 			$('.rep').click(function () {
 				var item = $(this).data('id');
-				var value = $('.reply' + item).html();
-				if (! value) {
-					var form = `<div id='signup-form'>
-									<form action='./sendMsgReply/` + item + `' method='post'>
-										<p><label for='names'>暱稱</label>
-										<input id='names' name='names' size='30' type='text' required/>
-										</p>
-										<p><label for='contents'>內容</label>
-										<input id='contents' name='contents' size='30' type='text' required/>
-										</p>
-										<p><input class='button' name='commit' type='submit' value='送出' /></p>
-									</form>
-								</div>`;
-					$('.reply' + item).append(form)
-				} else {
-					$('.reply' + item).empty();
+				var replyform = $('.replyform'+item);
+				var style = replyform.css('display');
+
+				if (style === 'none'){
+					replyform.show();
+				}
+
+				if (style === 'block'){
+					replyform.hide();
 				}
 			});
 
+			$('.replySubmit').click(function () {
+				var item = $(this).data('id');
+				var replyName = $('#replyName'+item).val();
+				var replyContents = $('#replyContents'+item).val();
+				var jsonData = {};
+				jsonData['replyName'] = replyName;
+				jsonData['replyContents'] = replyContents;
+
+				$.ajax({
+					type: 'POST',
+					url: './'+item,
+					dataType: 'json',
+					data: jsonData,
+					success: function (res) {
+						console.log(res);
+						if(res.status === 200){
+							alert(res.msg);
+							location.reload()
+						}
+					},
+					error: function (err) {
+						console.log(err)
+					}
+				});
+			});
+
 			$('.newre').click(function () {
-				var value = $('.newform').html();
-				if (! value) {
-					var item = $(this).data('id');
-					var form = `<div id='signup-form'>
-												<form action='./newMsgReply' method='post'>
-													<p><label for='names'>暱稱</label>
-													<input id='names' name='names' size='30' type='text' required/>
-													</p>
-													<p><label for='contents'>內容</label>
-													<input id='contents' name='contents' size='30' type='text' required/>
-													</p>
-													<p><input class='button' name='commit' type='submit' value='送出' /></p>
-												</form>
-											</div>`;
-					$('.newform').append(form)
-				} else {
-					$('.newform').empty();
+				var newform = $('.newform');
+				var style = newform.css('display');
+
+				if (style === 'none'){
+					newform.show();
 				}
+
+				if (style === 'block'){
+					newform.hide();
+				}
+			});
+
+			$('.newSubmit').click(function () {
+				var newName = $('#newName').val();
+				var newContents = $('#newContents').val();
+				var jsonData = {};
+				jsonData['newName'] = newName;
+				jsonData['newContents'] = newContents;
+
+				$.ajax({
+					type: 'POST',
+					url: './',
+					dataType: 'json',
+					data: JSON.stringify(jsonData),
+					contentType: "application/json;charset=utf-8",
+					success: function (res) {
+						if(res.status === 200){
+							alert(res.msg);
+							location.reload()
+						}
+					},
+					error: function (err) {
+						console.log(err)
+					}
+				});
 			});
 
 			$('.p').dblclick(function () {
 				var item = $(this).data('id');
-				var html = $(this);
-				var p = $('.pc' + item).html();
-				html.empty();
-				var form = `<div id='signup-form'>
-								<form action='./updateMsgReply/` + item + `' method='post'>
-									<p>
-										<input id='contents' name='contents' size='30' type='text' value='` + p + `'/>
-									</p>
-									<p><input class='button' name='commit' type='submit' value='送出' /></p>
-								</form>
-							</div>`;
-				$(this).append(form)
+				var pc = $('.pc' + item);
+				var pcHTML = pc.html();
+				var pu = $('.pu' + item);
+				var style = pc.css('display');
+				if (style === 'block'){
+					pc.hide();
+					$('#updateContents' + item).val(pcHTML);
+					pu.show();
+				}
+			});
+
+			$('.updateSubmit').click(function () {
+				var item = $(this).data('id');
+				var updateContents = $('#updateContents'+item).val();
+				var jsonData = {};
+				jsonData['updateContents'] = updateContents;
+
+				$.ajax({
+					type: 'PUT',
+					url: './'+item,
+					dataType: 'json',
+					data: jsonData,
+					success: function (res) {
+						console.log(res)
+						if(res.status === 200){
+							alert(res.msg);
+							location.reload()
+						}
+					},
+					error: function (err) {
+						console.log(err)
+					}
+				});
 			});
 		</script>
 	</body>

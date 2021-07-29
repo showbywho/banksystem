@@ -7,150 +7,154 @@ use App\Repository\MsgBoardRepository;
 use App\Repository\ReplyRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 class MsgBoardController extends AbstractController
 {
-    private $locationUrl = 'http://localhost:8000/';
+ /**
+  *
+  * @Route("/", methods = {"GET"})
+  *
+  * @return Response
+  */
+ public function index(Request $request, MsgBoardRepository $msgBoard)
+ {
+  $page = $request->query->getInt('p', 1);
+  $pageQuery = $msgBoard->pageQuery($page);
+  $pageCount = $msgBoard->pageCount($page);
 
-    /**
-     *
-     * @Route("/")
-     *
-     * @return Response
-     */
-    public function index(Request $request, MsgBoardRepository $msgBoard)
-    {
-        $page = $request->query->getInt('p', 1);
-        $pageQuery = $msgBoard->pageQuery($page);
-        $pageConut = $msgBoard->pageConut($page);
+  return $this->render('msgBoard/msg.html.twig', [
+   'totalComments' => $pageCount['totalComments'],
+   'totalPage' => $pageCount['totalPage'],
+   'page' => $pageCount['page'],
+   'comments' => $pageQuery,
+  ]);
+ }
 
-        return $this->render('msgBoard/msg.html.twig', [
-            'totalComments' => $pageConut['totalComments'],
-            'totalPage' => $pageConut['totalPage'],
-            'page' => $pageConut['page'],
-            'comments' => $pageQuery
-        ]);
-    }
+ /**
+  * @Route("/{pmId}", methods = {"GET"})
+  */
+ public function getMsgReply($pmId, ReplyRepository $reply)
+ {
+  $users = $reply->msgReply($pmId);
 
-    /**
-     * @Route("/getMsgReply/{pmId}")
-     */
-    public function getMsgReply($pmId, ReplyRepository $reply)
-    {
-        $users = $reply->msgReply($pmId);
+  return new Response(
+   json_encode(['status' => 200, 'msg' => "success", 'data' => $users])
+  );
+ }
 
-        return new Response(
-            json_encode($users)
-        );
-    }
+ /**
+  * @Route("/{pmId}", methods = {"POST"})
+  */
+ public function sendMsgReply($pmId, Request $request, EntityManagerInterface $em)
+ {
+  $contents = $request->request->get('replyContents');
+  $names = $request->request->get('replyName');
+  $ip = $request->server->get('REMOTE_ADDR');
 
-    /**
-     * @Route("/sendMsgReply/{pmId}")
-     */
-    public function sendMsgReply($pmId, Request $request, EntityManagerInterface $em)
-    {
-        $names = $request->request->get('names');
-        $contents = $request->request->get('contents');
-        $ip = $request->server->get('REMOTE_ADDR');
+  if (!empty($request->server->get('HTTP_X_FORWARDED_FOR'))) {
+   $ip = $request->server->get('HTTP_X_FORWARDED_FOR');
+  }
 
-        if (!empty($request->server->get('HTTP_X_FORWARDED_FOR'))) {
-            $ip = $request->server->get('HTTP_X_FORWARDED_FOR');
-        }
+  if (!empty($request->server->get('HTTP_CLIENT_IP'))) {
+   $ip = $request->server->get('HTTP_CLIENT_IP');
+  }
 
-        if (!empty($request->server->get('HTTP_CLIENT_IP'))) {
-            $ip = $request->server->get('HTTP_CLIENT_IP');
-        }
+  $times = date('Y-m-d H:i:s');
+  $replyInsert = new Reply();
+  $replyInsert->setContents($contents);
+  $replyInsert->setOwner($names);
+  $replyInsert->setTimes($times);
+  $replyInsert->setUserIp($ip);
+  $replyInsert->setTag($pmId);
+  $em->persist($replyInsert);
+  $em->flush();
 
-        $times = date('Y-m-d H:i:s');
-        $replyInsert = new Reply();
-        $replyInsert->setContents($contents);
-        $replyInsert->setOwner($names);
-        $replyInsert->setTimes($times);
-        $replyInsert->setUserIp($ip);
-        $replyInsert->setTag($pmId);
-        $em->persist($replyInsert);
-        $em->flush();
+  return new Response(
+   json_encode(['status' => 200, 'msg' => '回覆留言成功！'])
+  );
+ }
 
-        return new RedirectResponse($this->locationUrl);
-    }
+ /**
+  * @Route("/", methods = {"POST"})
+  */
+ public function newMsgReply(Request $request, EntityManagerInterface $em)
+ {
+  $ip = $request->server->get('REMOTE_ADDR');
+  $contents = $request->request->get('newContents');
+  $names = $request->request->get('newName');
 
-    /**
-     * @Route("/newMsgReply")
-     */
-    public function newMsgReply(Request $request, EntityManagerInterface $em)
-    {
-        $names = $request->request->get('names');
-        $contents = $request->request->get('contents');
-        $ip = $request->server->get('REMOTE_ADDR');
+  if (!empty($request->server->get('HTTP_X_FORWARDED_FOR'))) {
+   $ip = $request->server->get('HTTP_X_FORWARDED_FOR');
+  }
 
-        if (!empty($request->server->get('HTTP_X_FORWARDED_FOR'))) {
-            $ip = $request->server->get('HTTP_X_FORWARDED_FOR');
-        }
+  if (!empty($request->server->get('HTTP_CLIENT_IP'))) {
+   $ip = $request->server->get('HTTP_CLIENT_IP');
+  }
 
-        if (!empty($request->server->get('HTTP_CLIENT_IP'))) {
-            $ip = $request->server->get('HTTP_CLIENT_IP');
-        }
+  $times = date('Y-m-d H:i:s');
+  $msgInsert = new MsgBoard();
+  $msgInsert->setContents($contents);
+  $msgInsert->setOwner($names);
+  $msgInsert->setTimes($times);
+  $msgInsert->setUserIp($ip);
+  $em->persist($msgInsert);
+  $em->flush();
 
-        $times = date('Y-m-d H:i:s');
-        $msgInsert = new MsgBoard();
-        $msgInsert->setContents($contents);
-        $msgInsert->setOwner($names);
-        $msgInsert->setTimes($times);
-        $msgInsert->setUserIp($ip);
-        $em->persist($msgInsert);
-        $em->flush();
+  return new Response(
+   json_encode(['status' => 200, 'msg' => '新增留言成功！'])
+  );
+ }
 
-        return new RedirectResponse($this->locationUrl);
-    }
+ /**
+  * @Route("/{id}", methods = {"PUT"})
+  */
+ public function updateMsgReply($id, Request $request, EntityManagerInterface $em)
+ {
+  $contents = $request->request->get('updateContents');
+  $ip = $request->server->get('REMOTE_ADDR');
 
-    /**
-     * @Route("/updateMsgReply/{id}")
-     */
-    public function updateMsgReply($id, Request $request, EntityManagerInterface $em)
-    {
-        $contents = $request->request->get('contents');
-        $ip = $request->server->get('REMOTE_ADDR');
+  if (!empty($request->server->get('HTTP_X_FORWARDED_FOR'))) {
+   $ip = $request->server->get('HTTP_X_FORWARDED_FOR');
+  }
 
-        if (!empty($request->server->get('HTTP_X_FORWARDED_FOR'))) {
-            $ip = $request->server->get('HTTP_X_FORWARDED_FOR');
-        }
+  if (!empty($request->server->get('HTTP_CLIENT_IP'))) {
+   $ip = $request->server->get('HTTP_CLIENT_IP');
+  }
 
-        if (!empty($request->server->get('HTTP_CLIENT_IP'))) {
-            $ip = $request->server->get('HTTP_CLIENT_IP');
-        }
+  $msgBoard = $em->find('App\Entity\MsgBoard', $id);
+  $msgBoard->setContents($contents);
+  $msgBoard->setUserIp($ip);
+  $em->persist($msgBoard);
+  $em->flush();
 
-        $msgBoard = $em->find('App\Entity\MsgBoard', $id);
-        $msgBoard->setContents($contents);
-        $msgBoard->setUserIp($ip);
-        $em->persist($msgBoard);
-        $em->flush();
+  return new Response(
+   json_encode(['status' => 200, 'msg' => '修改留言成功！'])
+  );
+ }
 
-        return new RedirectResponse($this->locationUrl);
-    }
+ /**
+  * @Route("/{id}", methods = {"DELETE"})
+  */
+ public function delMsgReply($id, EntityManagerInterface $em)
+ {
+  $msgBoard = $em->getRepository('App\Entity\MsgBoard')->find($id);
 
-    /**
-     * @Route("/delMsgReply")
-     */
-    public function delMsgReply(Request $request, EntityManagerInterface $em)
-    {
-        $id = $request->request->get('listId');
-        $msgBoard = $em->getRepository('App\Entity\MsgBoard')->find($id);
+  if ($msgBoard) {
+   $em->remove($msgBoard);
+   $replyBoard = $em->getRepository('App\Entity\Reply')->findBy(['tag' => $id]);
 
-        if ($msgBoard) {
-            $em->remove($msgBoard);
-            $replyBoard = $em->getRepository('App\Entity\Reply')->findBy(['tag' => $id]);
+   foreach ($replyBoard as $value) {
+    $em->remove($value);
+   }
+  }
 
-            foreach ($replyBoard as $value) {
-                $em->remove($value);
-            }
-        }
+  $em->flush();
 
-        $em->flush();
-
-        return new RedirectResponse($this->locationUrl);
-    }
+  return new Response(
+   json_encode(['status' => 200, 'msg' => '刪除留言成功'])
+  );
+ }
 }

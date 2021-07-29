@@ -23,9 +23,9 @@ class MsgBoardRepository extends ServiceEntityRepository
      *
      * @return array
      */
-    public function pageConut($page)
+    public function pageCount($page)
     {
-        $page = $page ?? 1;
+        $page = !empty($page) ? $page : 1;
         $totalComments = $this->getEntityManager()->getRepository('App\Entity\MsgBoard')->count([]);
         $totalPage = ceil($totalComments / $this->limit);
 
@@ -41,6 +41,7 @@ class MsgBoardRepository extends ServiceEntityRepository
      */
     public function pageQuery($page)
     {
+        $page = !empty($page) ? $page : 1;
         $offset = ($page - 1) * $this->limit;
         $comments = $this->getEntityManager()->getRepository('App\Entity\MsgBoard')->findBy([], ['id' => 'DESC'], $this->limit, $offset);
 
