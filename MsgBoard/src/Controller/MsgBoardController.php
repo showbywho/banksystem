@@ -42,7 +42,7 @@ class MsgBoardController extends AbstractController
         $users = $reply->msgReply($pmId);
 
         return new Response(
-            json_encode(['status' => 200, 'msg' => "success", 'data' => $users])
+            json_encode(['status' => 400, 'msg' => "success", 'data' => $users])
         );
     }
 
