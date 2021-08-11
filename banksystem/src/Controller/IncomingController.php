@@ -2,8 +2,11 @@
 
 namespace App\Controller;
 
+use App\Entity\Incoming;
 use App\Repository\IncomingRepository;
+use App\Repository\AdminRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
@@ -45,16 +48,17 @@ class IncomingController extends AbstractController
      * @Route("/incoming", methods = {"POST"})
      *
      * @param object Request $request
-     * @param object IncomingRepository $incoming
+     * @param object IncomingRepository $admin
+     * @param object EntityManagerInterface $em
      *
      * @return JsonResponse
      */
-    public function insertIncoming(Request $request, IncomingRepository $incoming)
+    public function insertIncoming(Request $request, AdminRepository $admin, EntityManagerInterface $em)
     {
-        $id = $request->getSession()->get('id');
+        $userId = $request->getSession()->get('id');
         $amount = $request->request->get('amount');
 
-        if (!$id) {
+        if (!$userId) {
             $incomingReturn = ['ret' => 'error', 'msg' => "無權限執行此操作"];
 
             return new JsonResponse($incomingReturn);
@@ -66,8 +70,25 @@ class IncomingController extends AbstractController
             return new JsonResponse($incomingReturn);
         }
 
-        $balanceReturn = $incoming->doIncoming($amount, $id, $request);
-        $incomingReturn = ['ret' => 'ok', 'msg' => "存款成功", 'result' => ['balance' => $balanceReturn]];
+        $balanceReturn = $admin->updateBalanceOptimistic($amount, $userId);
+        $msg = "存款成功";
+
+        if ($balanceReturn['status'] == '2') {
+            $msg = "更新操作逾期,請重新操作一次！";
+        }
+
+        $incomingInsert = new Incoming();
+        $incomingInsert->setTradeNo('tradeNO' . strtotime("now") . rand(100, 999))
+            ->setUserId($userId)
+            ->setUserName($balanceReturn['nickName'])
+            ->setAmount(intval($amount))
+            ->setBeforeBalance($balanceReturn['balance'])
+            ->setAfterBalance($balanceReturn['countAmount'])
+            ->setStatus($balanceReturn['status']);
+        $em->persist($incomingInsert);
+        $em->flush();
+        $request->getSession()->set('balance', $balanceReturn['countAmount']);
+        $incomingReturn = ['ret' => 'ok', 'msg' => $msg, 'result' => ['balance' => $balanceReturn['countAmount']]];
 
         return new JsonResponse($incomingReturn);
     }

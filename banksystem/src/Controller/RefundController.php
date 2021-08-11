@@ -2,8 +2,11 @@
 
 namespace App\Controller;
 
+use App\Entity\Refund;
 use App\Repository\RefundRepository;
+use App\Repository\AdminRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
@@ -46,15 +49,16 @@ class RefundController extends AbstractController
      *
      * @param object Request $request
      * @param object RefundRepository $refund
+     * @param object EntityManagerInterface $em
      *
      * @return JsonResponse
      */
-    public function insertRefund(Request $request, RefundRepository $refund)
+    public function insertRefund(Request $request, AdminRepository $admin, EntityManagerInterface $em)
     {
-        $id = $request->getSession()->get('id');
+        $userId = $request->getSession()->get('id');
         $amount = $request->request->get('amount');
 
-        if (!$id) {
+        if (!$userId) {
             $refundReturn = ['ret' => 'error', 'msg' => "無權限執行此操作"];
 
             return new JsonResponse($refundReturn);
@@ -66,7 +70,7 @@ class RefundController extends AbstractController
             return new JsonResponse($refundReturn);
         }
 
-        $balanceReturn = $refund->doRefund($amount, $id, $request);
+        $balanceReturn = $admin->updateBalancePessimistic($amount, $userId, $request);
 
         if (isset($balanceReturn['error'])) {
             $balance = $balanceReturn['error'];
@@ -75,8 +79,24 @@ class RefundController extends AbstractController
             return new JsonResponse($refundReturn);
         }
 
-        $balance = $balanceReturn['success'];
-        $refundReturn = ['ret' => 'ok', 'msg' => "提現成功", 'result' => ['balance' => $balance]];
+        $msg = "提現成功";
+
+        if (!$balanceReturn['status'] == '2') {
+            $msg = "更新操作逾期,請重新操作一次！";
+        }
+
+        $refundInsert = new Refund();
+        $refundInsert->setTradeNo('tradeNO' . strtotime("now") . rand(100, 999))
+            ->setUserId($userId)
+            ->setUserName($balanceReturn['nickName'])
+            ->setAmount(intval($amount))
+            ->setBeforeBalance($balanceReturn['balance'])
+            ->setAfterBalance($balanceReturn['countAmount'])
+            ->setStatus($balanceReturn['status']);
+        $em->persist($refundInsert);
+        $em->flush();
+        $request->getSession()->set('balance', $balanceReturn['countAmount']);
+        $refundReturn = ['ret' => 'ok', 'msg' => $msg, 'result' => ['balance' => $balanceReturn['countAmount']]];
 
         return new JsonResponse($refundReturn);
     }
