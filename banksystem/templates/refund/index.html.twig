@@ -50,7 +50,11 @@
                             <td><span class="badge bg-success">{{list.beforeBalance}}</span></td>
                             <td><span class="badge bg-warning">{{list.afterBalance}}</span></td>
                             <td>{{list.createTime|date('Y/m/d H:i:s')}}</td>
-                            <td><span class="badge bg-success">{{list.status}}</span></td>
+                             {% if list.status == 1 %}
+                                <td><span class="badge bg-success">提現成功</span></td>
+                            {% else %}
+                                <td><span class="badge bg-danger">提現失敗</span></td>
+                            {% endif %}
                             <td>{{list.remark}}</td>
                         </tr>
 				{% endfor %}
