@@ -4,9 +4,8 @@ namespace App\Controller;
 
 use App\Repository\AdminRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
@@ -17,12 +16,12 @@ class AdminController extends AbstractController
     /**
      * @Route("/admin", name = "admin", methods = {"GET"})
      *
-     * @param object Request $request
-     * @param object AdminRepository $admin
+     * @param Request $request
+     * @param AdminRepository $admin
      *
-     * @return array
+     * @return RedirectResponse|Response
      */
-    public function index(Request $request, AdminRepository $admin): Response
+    public function index(Request $request, AdminRepository $admin)
     {
         $id = $request->getSession()->get('id');
 
@@ -31,12 +30,12 @@ class AdminController extends AbstractController
         }
 
         $request = $request->getSession();
-        $listArray = $admin->getList($id);
+        $userData = $admin->getUser($id);
 
         return $this->render('admin/index.html.twig', [
-            'listArray' => $listArray,
+            'user_data' => $userData,
             'uid' =>  $request->get('id'),
-            'nickName' => $request->get('nickName'),
+            'nick_name' => $request->get('nick_name'),
             'balance' => $request->get('balance'),
         ]);
     }

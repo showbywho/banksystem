@@ -20,12 +20,12 @@ class RefundController extends AbstractController
     /**
      * @Route("/refund", methods = {"GET"})
      *
-     * @param object Request $request
-     * @param object RefundRepository $refund
+     * @param Request $request
+     * @param RefundRepository $refund
      *
-     * @return array
+     * @return RedirectResponse|Response
      */
-    public function index(Request $request, RefundRepository $refund): Response
+    public function index(Request $request, RefundRepository $refund)
     {
         $id = $request->getSession()->get('id');
 
@@ -34,69 +34,98 @@ class RefundController extends AbstractController
         }
 
         $request = $request->getSession();
-        $listArray = $refund->getList($id);
+        $userRefundListData = $refund->getUserRefundList($id);
 
         return $this->render('refund/index.html.twig', [
-            'listArray' => $listArray,
+            'user_refund_list_data' => $userRefundListData,
             'uid' =>  $request->get('id'),
-            'nickName' => $request->get('nickName'),
+            'nick_name' => $request->get('nick_name'),
             'balance' => $request->get('balance'),
         ]);
     }
 
     /**
-     * @Route("/refund", methods = {"POST"})
+     * @Route("/redisRefund", methods = {"POST"})
      *
-     * @param object Request $request
-     * @param object RefundRepository $refund
-     * @param object EntityManagerInterface $em
+     * @param Request $request
+     * @param AdminRepository $admin
+     * @param EntityManagerInterface $em
      *
      * @return JsonResponse
      */
-    public function insertRefund(Request $request, AdminRepository $admin, EntityManagerInterface $em)
-    {
+    public function redisRefund(
+        Request $request,
+        AdminRepository $admin,
+        EntityManagerInterface $em
+    ) {
         $userId = $request->getSession()->get('id');
         $amount = $request->request->get('amount');
+        $user = $admin->getUser($userId);
 
         if (!$userId) {
-            $refundReturn = ['ret' => 'error', 'msg' => "無權限執行此操作"];
+            $refundReturn = [
+                'result' => 'error',
+                'msg' => '無權限執行此操作',
+            ];
 
             return new JsonResponse($refundReturn);
         }
 
         if (0 >= $amount) {
-            $refundReturn = ['ret' => 'error', 'msg' => "存款金額($amount)不得為負數或0"];
+            $refundReturn = [
+                'result' => 'error',
+                'msg' => "存款金額($amount)不得為負數或0",
+            ];
 
             return new JsonResponse($refundReturn);
         }
 
-        $balanceReturn = $admin->updateBalancePessimistic($amount, $userId, $request);
+        $tradeNo = 'tradeNO' . strtotime('now') . rand(100, 999);
+        $redis = new \Predis\Client();
+        $beforeAmount = $redis->get("user:$userId");
 
-        if (isset($balanceReturn['error'])) {
-            $balance = $balanceReturn['error'];
-            $refundReturn = ['ret' => 'ok', 'msg' => "餘額($balance)不足無法提現"];
+        if (($user['balance'] + $beforeAmount) < $amount) {
+
+            $refundReturn = [
+                'result' => 'error',
+                'msg' => "餘額(" . $user['balance'] . ")不足無法提現",
+            ];
 
             return new JsonResponse($refundReturn);
         }
 
-        $msg = "提現成功";
-
-        if (!$balanceReturn['status'] == '2') {
-            $msg = "更新操作逾期,請重新操作一次！";
-        }
+        $afterAmount = $redis->decrby("user:$userId", intval($amount));
+        $beforeBalance = $user['balance'] + intval($beforeAmount);
+        $afterBalance = $user['balance'] + $afterAmount;
 
         $refundInsert = new Refund();
-        $refundInsert->setTradeNo('tradeNO' . strtotime("now") . rand(100, 999))
-            ->setUserId($userId)
-            ->setUserName($balanceReturn['nickName'])
+        $refundInsert->setTradeNo($tradeNo)
+            ->setUserId($user['id'])
+            ->setUserName($user['nickName'])
             ->setAmount(intval($amount))
-            ->setBeforeBalance($balanceReturn['balance'])
-            ->setAfterBalance($balanceReturn['countAmount'])
-            ->setStatus($balanceReturn['status']);
+            ->setBeforeBalance($beforeBalance)
+            ->setAfterBalance($afterBalance)
+            ->setStatus(Refund::WAIT);
         $em->persist($refundInsert);
         $em->flush();
-        $request->getSession()->set('balance', $balanceReturn['countAmount']);
-        $refundReturn = ['ret' => 'ok', 'msg' => $msg, 'result' => ['balance' => $balanceReturn['countAmount']]];
+        $refundId = $refundInsert->getId();
+
+        $refundArray = [
+            'user_id' => $userId,
+            'amount' => $amount,
+            'order_id' => $refundId,
+            'way' => 'minus',
+        ];
+
+        $serializedData = serialize($refundArray);
+        $redis->rpush('order_data', $serializedData);
+
+        $msg = '提現成功';
+        $refundReturn = [
+            'result' => 'ok',
+            'msg' => $msg,
+            'ret' => ['balance' => $afterBalance],
+        ];
 
         return new JsonResponse($refundReturn);
     }

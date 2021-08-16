@@ -2,14 +2,18 @@
 
 namespace App\Entity;
 
-use App\Repository\AdminRepository;
 use Doctrine\ORM\Mapping as ORM;
+use App\Repository\AdminRepository;
 
 /**
  * @ORM\Entity(repositoryClass=AdminRepository::class)
  */
 class Admin
 {
+    const FAIL = 1;
+    const SUCCESS = 2;
+    const WAIT = 3;
+
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
@@ -86,7 +90,7 @@ class Admin
     /**
      * 取得Admin表的id欄位
      *
-     * @return self
+     * @return int
      */
     public function getId(): ?int
     {
@@ -109,7 +113,7 @@ class Admin
     /**
      * 取得Admin表的account欄位
      *
-     * @return self
+     * @return string
      */
     public function getAccount(): ?string
     {
@@ -132,7 +136,7 @@ class Admin
     /**
      * 取得Admin表的version欄位
      *
-     * @return self
+     * @return int
      */
     public function getVersion(): ?int
     {
@@ -155,7 +159,7 @@ class Admin
     /**
      * 取得Admin表的roles欄位
      *
-     * @return self
+     * @return array
      */
     public function getRoles(): array
     {
@@ -181,7 +185,7 @@ class Admin
     /**
      * 取得Admin表的password欄位
      *
-     * @return self
+     * @return string
      */
     public function getPassword(): string
     {
@@ -205,7 +209,7 @@ class Admin
     /**
      * 取得Admin表的balance欄位
      *
-     * @return self
+     * @return float
      */
     public function getBalance(): ?float
     {
@@ -228,7 +232,7 @@ class Admin
     /**
      * 取得Admin表的total_refund欄位
      *
-     * @return self
+     * @return float
      */
     public function getTotalRefund(): ?float
     {
@@ -251,7 +255,7 @@ class Admin
     /**
      * 取得Admin表的session_id欄位
      *
-     * @return self
+     * @return string
      */
     public function getSessionId(): ?string
     {
@@ -274,7 +278,7 @@ class Admin
     /**
      * 取得Admin表的total_deposit欄位
      *
-     * @return self
+     * @return float
      */
     public function getTotalDeposit(): ?float
     {
@@ -297,7 +301,7 @@ class Admin
     /**
      * 取得Admin表的create_time欄位
      *
-     * @return self
+     * @return \DateTimeInterface
      */
     public function getCreateTime(): ?\DateTimeInterface
     {
@@ -320,7 +324,7 @@ class Admin
     /**
      * 取得Admin表的update_time欄位
      *
-     * @return self
+     * @return \DateTimeInterface
      */
     public function getUpdateTime(): ?\DateTimeInterface
     {
@@ -343,7 +347,7 @@ class Admin
     /**
      * 取得Admin表的status欄位
      *
-     * @return self
+     * @return int
      */
     public function getStatus(): ?int
     {
@@ -366,7 +370,7 @@ class Admin
     /**
      * 取得Admin表的nick_name欄位
      *
-     * @return self
+     * @return string
      */
     public function getNickName(): ?string
     {
@@ -382,6 +386,58 @@ class Admin
     public function setNickName(string $nickName): self
     {
         $this->nickName = $nickName;
+
+        return $this;
+    }
+
+    /**
+     * 設定Admin表的餘額欄位遞增
+     *
+     * @param float $amount
+     * @return self
+     */
+    public function plusBalance(float $amount): self
+    {
+        $this->balance = $this->balance + $amount;
+
+        return $this;
+    }
+
+    /**
+     * 設定Admin表的餘額欄位遞減
+     *
+     * @param float $amount
+     * @return self
+     */
+    public function minusBalance(float $amount): self
+    {
+        $this->balance = $this->balance - $amount;
+
+        return $this;
+    }
+
+    /**
+     * 設定Admin表的總存款欄位累加
+     *
+     * @param float $amount
+     * @return self
+     */
+    public function plusTotalDeposit(float $amount): self
+    {
+        $this->totalDeposit = $this->totalDeposit + $amount;
+
+        return $this;
+    }
+
+    /**
+     * 設定Admin表的總提款欄位累加
+     *
+     * @param float $amount
+     * @return self
+     */
+    public function minusTotalRefund(float $amount): self
+    {
+        $this->totalRefund = $this->totalRefund + $amount;
 
         return $this;
     }

@@ -74,7 +74,7 @@
       <!-- Sidebar user panel (optional) -->
       <div class="user-panel mt-3 pb-3 mb-3 d-flex">
         <div class="info">
-          <a href="#" class="d-block">歡迎 {{nickName}}/餘額 <span id='balance'>{{balance}}</span></a>
+          <a href="#" class="d-block">歡迎 {{nick_name}}</a>
         </div>
       </div>
 
@@ -141,7 +141,7 @@
         url: './logout',
         dataType: 'json',
         success: function (res) {
-          if(res.ret=='ok'){
+          if(res.result=='ok'){
             alert(res.msg);
             window.location.href = "{{ path('login') }}"
           }
