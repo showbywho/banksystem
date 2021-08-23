@@ -14,18 +14,19 @@ class RefundRepository extends ServiceEntityRepository
     }
 
     /**
-     * 列表查詢
+     * 使用者提款明細列表查詢
      *
      * @param string|int $id 當前使用者ID
      *
      * @return array
      */
-    public function getList($id)
+    public function getUserRefundList($id)
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
-        $result = $qb->select('r')->from('App\Entity\Refund', 'r')
-            ->where('r.userId=:userId')
-            ->setParameter('userId', $id)
+        $result = $qb->select('r')
+            ->from('App\Entity\Refund', 'r')
+            ->where('r.userId = :user_id')
+            ->setParameter('user_id', $id)
             ->getQuery()
             ->getArrayResult();
 

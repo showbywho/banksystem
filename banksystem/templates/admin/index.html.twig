@@ -40,17 +40,15 @@
                         </tr>
                         </thead>
                         <tbody>
-                        {% for list in listArray %}
-                                <tr>
-                                    <td>{{list.id}}</td>
-                                    <td>{{list.account}}</td>
-                                    <td>{{list.nickName}}</td>
-                                    <td><span class="badge bg-danger">{{list.balance}}</span></td>
-                                    <td><span class="badge bg-success">{{list.totalDeposit}}</span></td>
-                                    <td><span class="badge bg-warning">{{list.totalRefund}}</span></td>
-                                    <td>{{list.createTime|date('Y/m/d H:i:s')}}</td>
-                                </tr>
-                        {% endfor %}
+                            <tr>
+                                <td>{{user_data.id}}</td>
+                                <td>{{user_data.account}}</td>
+                                <td>{{user_data.nickName}}</td>
+                                <td><span class="badge bg-danger">{{user_data.balance}}</span></td>
+                                <td><span class="badge bg-success">{{user_data.totalDeposit}}</span></td>
+                                <td><span class="badge bg-warning">{{user_data.totalRefund}}</span></td>
+                                <td>{{user_data.createTime|date('Y/m/d H:i:s')}}</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>

@@ -4,8 +4,8 @@ namespace App\Controller;
 
 use App\Repository\AdminRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -14,9 +14,9 @@ class LoginController extends AbstractController
     /**
      * @Route("/login", methods = {"GET"})
      *
-     * @return array
+     * @return Response
      */
-    public function index(): Response
+    public function index()
     {
         return $this->render('login/index.html.twig', []);
     }
@@ -24,20 +24,33 @@ class LoginController extends AbstractController
     /**
      * @Route("/login", name = "login", methods = {"POST"})
      *
-     * @param object Request $request
-     * @param object AdminRepository $admin
+     * @param Request $request
+     * @param AdminRepository $admin
      *
      * @return JsonResponse
      */
-    public function login(Request $request, AdminRepository $admin): Response
+    public function login(Request $request, AdminRepository $admin)
     {
         $account = $request->request->get('account');
         $password = MD5($request->request->get('password'));
-        $result = $admin->loginValidation($account, $password, $request->getSession());
-        $jsonData = ['ret' => 'error', 'msg' => '帳號或密碼錯誤'];
 
-        if($result){
-            $jsonData = ['ret' => 'ok', 'msg' => '登入成功', 'result' => $result];
+        $ret = $admin->loginValidation(
+            $account,
+            $password,
+            $request->getSession()
+        );
+
+        $jsonData = [
+            'result' => 'error',
+            'msg' => '帳號或密碼錯誤',
+        ];
+
+        if ($ret) {
+            $jsonData = [
+                'result' => 'ok',
+                'msg' => '登入成功',
+                'ret' => $ret,
+            ];
         }
 
         return new JsonResponse($jsonData);
@@ -46,16 +59,20 @@ class LoginController extends AbstractController
     /**
      * @Route("/logout", methods = {"GET"})
      *
-     * @param object Request $request
+     * @param Request $request
      *
      * @return JsonResponse
      */
-    public function logout(Request $request): Response
+    public function logout(Request $request)
     {
         $request = $request->getSession();
         $request->clear();
-        $result = ['ret' => 'ok', 'msg' => '登出成功'];
 
-        return new JsonResponse($result);
+        $ret = [
+            'result' => 'ok',
+            'msg' => '登出成功',
+        ];
+
+        return new JsonResponse($ret);
     }
 }

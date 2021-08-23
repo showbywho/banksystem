@@ -7,8 +7,8 @@ use App\Repository\IncomingRepository;
 use App\Repository\AdminRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -20,12 +20,12 @@ class IncomingController extends AbstractController
     /**
      * @Route("/incoming", methods = {"GET"})
      *
-     * @param object Request $request
-     * @param object IncomingRepository $incoming
+     * @param  Request $request
+     * @param  IncomingRepository $incoming
      *
-     * @return array
+     * @return RedirectResponse|Response
      */
-    public function index(Request $request, IncomingRepository $incoming): Response
+    public function index(Request $request, IncomingRepository $incoming)
     {
         $id = $request->getSession()->get('id');
 
@@ -34,61 +34,90 @@ class IncomingController extends AbstractController
         }
 
         $request = $request->getSession();
-        $listArray = $incoming->getList($id);
+        $userIncomingListData = $incoming->getUserIncomingList($id);
 
         return $this->render('incoming/index.html.twig', [
-            'listArray' => $listArray,
+            'user_incoming_list_data' => $userIncomingListData,
             'uid' =>  $request->get('id'),
-            'nickName' => $request->get('nickName'),
+            'nick_name' => $request->get('nick_name'),
             'balance' => $request->get('balance'),
         ]);
     }
 
     /**
-     * @Route("/incoming", methods = {"POST"})
+     * @Route("/redisIncoming", methods = {"POST"})
      *
-     * @param object Request $request
-     * @param object IncomingRepository $admin
-     * @param object EntityManagerInterface $em
+     * @param Request $request
+     * @param AdminRepository $admin
+     * @param EntityManagerInterface $em
      *
      * @return JsonResponse
      */
-    public function insertIncoming(Request $request, AdminRepository $admin, EntityManagerInterface $em)
-    {
+    public function redisIncoming(
+        Request $request,
+        AdminRepository $admin,
+        EntityManagerInterface $em
+    ) {
         $userId = $request->getSession()->get('id');
         $amount = $request->request->get('amount');
 
         if (!$userId) {
-            $incomingReturn = ['ret' => 'error', 'msg' => "無權限執行此操作"];
+            $incomingReturn = [
+                'result' => 'error',
+                'msg' => '無權限執行此操作',
+            ];
 
             return new JsonResponse($incomingReturn);
         }
+
+        $user = $admin->getUser($userId);
 
         if (0 >= $amount) {
-            $incomingReturn = ['ret' => 'error', 'msg' => "存款金額($amount)不得為負數或0"];
+            $incomingReturn = [
+                'result' => 'error',
+                'msg' => "存款金額($amount)不得為負數或0",
+            ];
 
             return new JsonResponse($incomingReturn);
         }
 
-        $balanceReturn = $admin->updateBalanceOptimistic($amount, $userId);
-        $msg = "存款成功";
-
-        if ($balanceReturn['status'] == '2') {
-            $msg = "更新操作逾期,請重新操作一次！";
-        }
+        $tradeNo = 'tradeNO' . strtotime('now') . rand(100, 999);
+        $redis = new \Predis\Client();
+        $beforeAmount = $redis->get("user:$userId");
+        $afterAmount = $redis->incrby("user:$userId", intval($amount));
+        $beforeBalance = $user['balance'] + intval($beforeAmount);
+        $afterBalance = $user['balance'] + $afterAmount;
 
         $incomingInsert = new Incoming();
-        $incomingInsert->setTradeNo('tradeNO' . strtotime("now") . rand(100, 999))
-            ->setUserId($userId)
-            ->setUserName($balanceReturn['nickName'])
+        $incomingInsert->setTradeNo($tradeNo)
+            ->setUserId($user['id'])
+            ->setUserName($user['nickName'])
             ->setAmount(intval($amount))
-            ->setBeforeBalance($balanceReturn['balance'])
-            ->setAfterBalance($balanceReturn['countAmount'])
-            ->setStatus($balanceReturn['status']);
+            ->setBeforeBalance($beforeBalance)
+            ->setAfterBalance($afterBalance)
+            ->setStatus(Incoming::WAIT);
         $em->persist($incomingInsert);
         $em->flush();
-        $request->getSession()->set('balance', $balanceReturn['countAmount']);
-        $incomingReturn = ['ret' => 'ok', 'msg' => $msg, 'result' => ['balance' => $balanceReturn['countAmount']]];
+
+        $incomingId = $incomingInsert->getId();
+        $incomingArray = [
+            'user_id' => $userId,
+            'amount' => $amount,
+            'order_id' => $incomingId,
+            'way' => 'plus',
+        ];
+
+        $serializedData = serialize($incomingArray);
+        $redis->rpush('order_data', $serializedData);
+
+        $msg = '存款成功';
+        $incomingReturn = [
+            'result' => 'ok',
+            'msg' => $msg,
+            'ret' => [
+                'balance' => $afterBalance,
+            ],
+        ];
 
         return new JsonResponse($incomingReturn);
     }

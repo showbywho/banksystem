@@ -14,18 +14,19 @@ class IncomingRepository extends ServiceEntityRepository
     }
 
     /**
-     * 列表查詢
+     * 使用者存款明細列表查詢
      *
      * @param int $id 當前使用者ID
      *
      * @return array
      */
-    public function getList($id)
+    public function getUserIncomingList($id)
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
-        $result = $qb->select('i')->from('App\Entity\Incoming', 'i')
-            ->where('i.userId=:userId')
-            ->setParameter('userId', $id)
+        $result = $qb->select('i')
+            ->from('App\Entity\Incoming', 'i')
+            ->where('i.userId = :user_id')
+            ->setParameter('user_id', $id)
             ->getQuery()
             ->getArrayResult();
 

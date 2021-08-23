@@ -1,3 +1,15 @@
 {
-    "git.ignoreLimitWarning": true
+    "git.ignoreLimitWarning": true,
+    "cSpell.words": [
+        "decrby",
+        "flushdb",
+        "hdel",
+        "hexists",
+        "hget",
+        "hset",
+        "incrby",
+        "llen",
+        "lpop",
+        "setnx"
+    ]
 }

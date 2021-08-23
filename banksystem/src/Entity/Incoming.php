@@ -2,14 +2,18 @@
 
 namespace App\Entity;
 
-use App\Repository\IncomingRepository;
 use Doctrine\ORM\Mapping as ORM;
+use App\Repository\IncomingRepository;
 
 /**
  * @ORM\Entity(repositoryClass=IncomingRepository::class)
  */
 class Incoming
 {
+    const FAIL = 1;
+    const SUCCESS = 2;
+    const WAIT = 3;
+
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
@@ -75,7 +79,7 @@ class Incoming
     /**
      * 取得Incoming表的id欄位
      *
-     * @return self
+     * @return int
      */
     public function getId(): ?int
     {
@@ -98,7 +102,7 @@ class Incoming
     /**
      * 取得Incoming表的trade_no欄位
      *
-     * @return self
+     * @return string
      */
     public function getTradeNo(): ?string
     {
@@ -121,7 +125,7 @@ class Incoming
     /**
      * 取得Incoming表的user_id欄位
      *
-     * @return self
+     * @return int
      */
     public function getUserId(): ?int
     {
@@ -144,7 +148,7 @@ class Incoming
     /**
      * 取得Incoming表的user_name欄位
      *
-     * @return self
+     * @return string
      */
     public function getUserName(): ?string
     {
@@ -167,7 +171,7 @@ class Incoming
     /**
      * 取得Incoming表的amount欄位
      *
-     * @return self
+     * @return float
      */
     public function getAmount(): ?float
     {
@@ -190,7 +194,7 @@ class Incoming
     /**
      * 取得Incoming表的before_balance欄位
      *
-     * @return self
+     * @return float
      */
     public function getBeforeBalance(): ?float
     {
@@ -213,7 +217,7 @@ class Incoming
     /**
      * 取得Incoming表的after_balance欄位
      *
-     * @return self
+     * @return float
      */
     public function getAfterBalance(): ?float
     {
@@ -236,7 +240,7 @@ class Incoming
     /**
      * 取得Incoming表的create_time欄位
      *
-     * @return self
+     * @return \DateTimeInterface
      */
     public function getCreateTime(): ?\DateTimeInterface
     {
@@ -259,7 +263,7 @@ class Incoming
     /**
      * 取得Incoming表的update_time欄位
      *
-     * @return self
+     * @return \DateTimeInterface
      */
     public function getUpdateTime(): ?\DateTimeInterface
     {
@@ -282,7 +286,7 @@ class Incoming
     /**
      * 取得Incoming表的status欄位
      *
-     * @return self
+     * @return int
      */
     public function getStatus(): ?int
     {
@@ -305,7 +309,7 @@ class Incoming
     /**
      * 取得Incoming表的remark欄位
      *
-     * @return self
+     * @return string
      */
     public function getRemark(): ?string
     {

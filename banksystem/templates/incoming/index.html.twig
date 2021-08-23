@@ -41,7 +41,7 @@
                         </tr>
                         </thead>
                         <tbody>
-				{% for list in listArray %}
+				{% for list in user_incoming_list_data %}
                         <tr>
                             <td>{{list.id}}</td>
                             <td>{{list.tradeNo}}</td>
@@ -51,9 +51,11 @@
                             <td><span class="badge bg-warning">{{list.afterBalance}}</span></td>
                             <td>{{list.createTime|date('Y/m/d H:i:s')}}</td>
                             {% if list.status == 1 %}
+                                <td><span class="badge bg-danger">存款失敗</span></td>
+                            {% elseif list.status == 2 %}
                                 <td><span class="badge bg-success">存款成功</span></td>
                             {% else %}
-                                <td><span class="badge bg-danger">存款失敗</span></td>
+                                <td><span class="badge bg-danger">等待處理中</span></td>
                             {% endif %}
                             <td>{{list.remark}}</td>
                         </tr>
@@ -110,16 +112,17 @@
 
         $.ajax({
             type: 'POST',
-            url: './incoming',
+            url: './redisIncoming',
             dataType: 'json',
             data: jsonData,
             success: function (res) {
-
+                console.log(res)
                 if (res.ret=='error'){
                     alert(res.msg);
                 }else{
-                    alert(res.msg);
-                    $('#balance').html(res.result.balance)
+                    alert(res.msg+'餘額尚有'+res.ret.balance+'元');
+                    window.location.reload();
+                    {# $('#balance').html(res.ret.balance) #}
                 }
             },
             error: function (err) {

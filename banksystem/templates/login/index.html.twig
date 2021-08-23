@@ -73,12 +73,12 @@ $(function () {
             success: function (res) {
                 console.log(res);
 
-                if(res.ret=='error'){
+                if(res.result=='error'){
                     alert(res.msg);
                 }
 
-                if(res.ret=='ok'){
-                    alert('恭喜'+res.result.nickName+res.msg+'即將為您跳轉頁面');
+                if(res.result=='ok'){
+                    alert('恭喜'+res.ret.nick_name+res.msg+'即將為您跳轉頁面');
                     window.location.href = "{{ path('admin') }}"
                 }
             },
