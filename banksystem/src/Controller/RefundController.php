@@ -82,9 +82,8 @@ class RefundController extends AbstractController
 
         $tradeNo = 'tradeNO' . strtotime('now') . rand(100, 999);
         $redis = new \Predis\Client();
-        $beforeAmount = $redis->get("user:$userId");
 
-        if (($user['balance'] + $beforeAmount) < $amount) {
+        if ($user['balance'] < $amount) {
 
             $refundReturn = [
                 'result' => 'error',
@@ -94,9 +93,8 @@ class RefundController extends AbstractController
             return new JsonResponse($refundReturn);
         }
 
-        $afterAmount = $redis->decrby("user:$userId", intval($amount));
-        $beforeBalance = $user['balance'] + intval($beforeAmount);
-        $afterBalance = $user['balance'] + $afterAmount;
+        $beforeBalance = $user['balance'];
+        $afterBalance = $user['balance'] + intval($amount);
 
         $refundInsert = new Refund();
         $refundInsert->setTradeNo($tradeNo)

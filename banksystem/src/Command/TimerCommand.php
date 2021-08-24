@@ -9,7 +9,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\DBAL\LockMode;
-use Doctrine\ORM\OptimisticLockException;
 
 class TimerCommand extends Command
 {
@@ -33,27 +32,46 @@ class TimerCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $batchSize = 20;
+        $batchSize = 50;
+        $loopRange = 1000;
         $redis = new \Predis\Client();
-        $redisOrderDataLen = $redis->llen('order_data');
-        $totalExec = ceil($redisOrderDataLen / $batchSize);
+        $rangeOrderData = [];
 
-        for ($i = 1; $i <= $totalExec; $i++) {
-            $batchSizeQueue = $redis->lrange('order_data', 0, $batchSize - 1);
-            $errorKey = '';
-            $this->em->getConnection()->beginTransaction();
+        for ($i = 0; $i < $loopRange; $i++) {
+            $redisPop = $redis->lpop('order_data');
+
+            if (empty($redisPop)) {
+                break;
+            }
+
+            $rangeOrderData[] = $redisPop;
+        }
+
+        $countArrayLen = count($rangeOrderData);
+        $totalExec = ceil($countArrayLen / $batchSize);
+
+        for ($i = 0; $i < $totalExec; $i++) {
+            $range = $i * $batchSize;
+
+            $this->em->beginTransaction();
             try {
-                foreach ($batchSizeQueue as $key => $value) {
-                    $errorKey = $key;
-                    $redisOrderData = unserialize($value);
+                for ($b = 0; $b < $batchSize; $b++) {
+                    $key = $b + $range;
+
+                    if (!isset($rangeOrderData[$key])) {
+                        break;
+                    }
+
+                    $originalData = $rangeOrderData[$key];
+                    $redisOrderData = unserialize($originalData);
                     $userId = $redisOrderData['user_id'];
                     $amount = $redisOrderData['amount'];
                     $way = $redisOrderData['way'];
                     $orderId = $redisOrderData['order_id'];
 
-                    if ($way == 'plus') {
+                    if ($way === 'plus') {
                         $incoming = $this->em
-                            ->getRepository(Incoming::class)
+                            ->getRepository('App\Entity\Incoming')
                             ->findOneBy([
                                 'id' => $orderId,
                                 'amount' => $amount,
@@ -64,14 +82,23 @@ class TimerCommand extends Command
                             $admin = $this->em->find('App\Entity\Admin', $userId);
 
                             if ($admin) {
+                                $version = $admin->getVersion();
+                                $this->em->lock(
+                                    $admin,
+                                    LockMode::PESSIMISTIC_READ,
+                                    $version
+                                );
                                 $admin->plusBalance($amount);
                                 $admin->plusTotalDeposit($amount);
-                                $redis->decrby("user:$userId", $amount);
                             }
+                        }
+
+                        if (!$incoming) {
+                            $redis->lpush('error_order_data', $rangeOrderData[$key]);
                         }
                     }
 
-                    if ($way == 'minus') {
+                    if ($way === 'minus') {
                         $refund = $this->em
                             ->getRepository('App\Entity\Refund')
                             ->findOneBy([
@@ -84,25 +111,30 @@ class TimerCommand extends Command
                             $admin = $this->em->find('App\Entity\Admin', $userId);
 
                             if ($admin) {
+                                $version = $admin->getVersion();
+                                $this->em->lock(
+                                    $admin,
+                                    LockMode::PESSIMISTIC_READ,
+                                    $version
+                                );
                                 $admin->minusBalance($amount);
                                 $admin->minusTotalRefund($amount);
-                                $redis->incrby("user:$userId", $amount);
                             }
+                        }
+
+                        if (!$refund) {
+                            $redis->lpush('error_order_data', $rangeOrderData[$key]);
                         }
                     }
                 }
 
                 $this->em->flush();
-                $this->em->clear();
-                $this->em->getConnection()->commit();
-                $redis->ltrim('order_data', $batchSize, $redisOrderDataLen);
+                $this->em->commit();
             } catch (\Exception $e) {
-                $errorData = $redis->lindex('order_data', $errorKey);
-                $redis->rpush('error_order_data', $errorData);
-                $redis->lrem('order_data', $errorKey, $errorData);
-                $this->em->getConnection()->rollBack();
-                $totalExec = ceil(($redisOrderDataLen - 1) / $batchSize);
-                $i--;
+                $this->em->rollBack();
+                $this->em->clear();
+                $errorDataArray = array_slice($rangeOrderData, $range, $batchSize);
+                $redis->rpush('error_order_data', $errorDataArray);
             }
         }
 
