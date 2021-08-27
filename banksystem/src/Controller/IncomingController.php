@@ -83,10 +83,8 @@ class IncomingController extends AbstractController
 
         $tradeNo = 'tradeNO' . strtotime('now') . rand(100, 999);
         $redis = new \Predis\Client();
-        $beforeAmount = $redis->get("user:$userId");
-        $afterAmount = $redis->incrby("user:$userId", intval($amount));
-        $beforeBalance = $user['balance'] + intval($beforeAmount);
-        $afterBalance = $user['balance'] + $afterAmount;
+        $beforeBalance = $user['balance'];
+        $afterBalance = $user['balance'] + intval($amount);
 
         $incomingInsert = new Incoming();
         $incomingInsert->setTradeNo($tradeNo)

@@ -33,8 +33,8 @@
                             <th>訂單號</th>
                             <th>申請者暱稱</th>
                             <th>提現金額</th>
-                            <th>提現前餘額</th>
-                            <th>提現後餘額</th>
+                            {# <th>提現前餘額</th>
+                            <th>提現後餘額</th> #}
                             <th>交易創建時間</th>
                             <th>狀態</th>
                             <th>備註</th>
@@ -47,8 +47,8 @@
                             <td>{{list.tradeNo}}</td>
                             <td>{{list.userName}}</td>
                             <td><span class="badge bg-danger">{{list.amount}}</span></td>
-                            <td><span class="badge bg-success">{{list.beforeBalance}}</span></td>
-                            <td><span class="badge bg-warning">{{list.afterBalance}}</span></td>
+                            {# <td><span class="badge bg-success">{{list.beforeBalance}}</span></td>
+                            <td><span class="badge bg-warning">{{list.afterBalance}}</span></td> #}
                             <td>{{list.createTime|date('Y/m/d H:i:s')}}</td>
                             {% if list.status == 1 %}
                                 <td><span class="badge bg-danger">提現失敗</span></td>
