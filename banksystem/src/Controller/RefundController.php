@@ -60,7 +60,6 @@ class RefundController extends AbstractController
     ) {
         $userId = $request->getSession()->get('id');
         $amount = $request->request->get('amount');
-        $user = $admin->getUser($userId);
 
         if (!$userId) {
             $refundReturn = [
@@ -74,12 +73,13 @@ class RefundController extends AbstractController
         if (0 >= $amount) {
             $refundReturn = [
                 'result' => 'error',
-                'msg' => "存款金額($amount)不得為負數或0",
+                'msg' => "提現金額($amount)不得為負數或0",
             ];
 
             return new JsonResponse($refundReturn);
         }
 
+        $user = $admin->getUser($userId);
         $tradeNo = 'tradeNO' . strtotime('now') . rand(100, 999);
         $redis = new \Predis\Client();
 
@@ -94,7 +94,7 @@ class RefundController extends AbstractController
         }
 
         $beforeBalance = $user['balance'];
-        $afterBalance = $user['balance'] + intval($amount);
+        $afterBalance = $user['balance'] - intval($amount);
 
         $refundInsert = new Refund();
         $refundInsert->setTradeNo($tradeNo)

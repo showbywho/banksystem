@@ -78,7 +78,8 @@ class Admin
     private $nickName;
 
     /**
-     * @ORM\Version @ORM\Column(name = "version", type="integer")
+     * @ORM\Version
+     * @ORM\Column(name = "version", type="integer")
      */
     private $version;
 
