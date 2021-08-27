@@ -85,8 +85,8 @@ class TimerCommand extends Command
                                 $version = $admin->getVersion();
                                 $this->em->lock(
                                     $admin,
-                                    LockMode::PESSIMISTIC_READ,
-                                    $version
+                                    LockMode::OPTIMISTIC,
+                                    $version,
                                 );
                                 $admin->plusBalance($amount);
                                 $admin->plusTotalDeposit($amount);
@@ -114,8 +114,8 @@ class TimerCommand extends Command
                                 $version = $admin->getVersion();
                                 $this->em->lock(
                                     $admin,
-                                    LockMode::PESSIMISTIC_READ,
-                                    $version
+                                    LockMode::OPTIMISTIC,
+                                    $version,
                                 );
                                 $admin->minusBalance($amount);
                                 $admin->minusTotalRefund($amount);
