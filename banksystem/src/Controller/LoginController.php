@@ -16,9 +16,15 @@ class LoginController extends AbstractController
      *
      * @return Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        return $this->render('login/index.html.twig', []);
+        $id = $request->getSession()->get('id');
+        $nickName = $request->getSession()->get('nick_name');
+
+        return $this->render('base.html.twig', [
+            'id' => $id,
+            'nick_name' => $nickName,
+        ]);
     }
 
     /**

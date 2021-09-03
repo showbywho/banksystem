@@ -10,10 +10,6 @@ use App\Repository\AdminRepository;
  */
 class Admin
 {
-    const FAIL = 1;
-    const SUCCESS = 2;
-    const WAIT = 3;
-
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
@@ -25,11 +21,6 @@ class Admin
      * @ORM\Column(name = "account", type = "string", length = 180, unique = true)
      */
     private $account;
-
-    /**
-     * @ORM\Column(name = "roles", type = "json")
-     */
-    private $roles = [];
 
     /**
      * @var string The hashed password
@@ -48,11 +39,6 @@ class Admin
     private $totalRefund;
 
     /**
-     * @ORM\Column(name = "session_id", type = "string", length = 255, nullable = true)
-     */
-    private $sessionId;
-
-    /**
      * @ORM\Column(name = "total_deposit", type = "float")
      */
     private $totalDeposit;
@@ -63,22 +49,13 @@ class Admin
     private $createTime;
 
     /**
-     * @ORM\Column(name = "update_time", type = "datetime", nullable = true)
-     */
-    private $updateTime;
-
-    /**
-     * @ORM\Column(name = "status", type = "integer")
-     */
-    private $status;
-
-    /**
      * @ORM\Column(name = "nick_name", type = "string", length = 255)
      */
     private $nickName;
 
     /**
-     * @ORM\Version @ORM\Column(name = "version", type="integer")
+     * @ORM\Version
+     * @ORM\Column(name = "version", type="integer")
      */
     private $version;
 
@@ -157,32 +134,6 @@ class Admin
     }
 
     /**
-     * 取得Admin表的roles欄位
-     *
-     * @return array
-     */
-    public function getRoles(): array
-    {
-        $roles = $this->roles;
-        $roles[] = 'ROLE_USER';
-
-        return array_unique($roles);
-    }
-
-    /**
-     * 設定Admin表的roles欄位
-     *
-     * @param array $roles
-     * @return self
-     */
-    public function setRoles(array $roles): self
-    {
-        $this->roles = $roles;
-
-        return $this;
-    }
-
-    /**
      * 取得Admin表的password欄位
      *
      * @return string
@@ -204,7 +155,6 @@ class Admin
 
         return $this;
     }
-
 
     /**
      * 取得Admin表的balance欄位
@@ -253,29 +203,6 @@ class Admin
     }
 
     /**
-     * 取得Admin表的session_id欄位
-     *
-     * @return string
-     */
-    public function getSessionId(): ?string
-    {
-        return $this->sessionId;
-    }
-
-    /**
-     * 設定Admin表的session_id欄位
-     *
-     * @param string $sessionId
-     * @return self
-     */
-    public function setSessionId(?string $sessionId): self
-    {
-        $this->sessionId = $sessionId;
-
-        return $this;
-    }
-
-    /**
      * 取得Admin表的total_deposit欄位
      *
      * @return float
@@ -317,52 +244,6 @@ class Admin
     public function setCreateTime(\DateTimeInterface $createTime): self
     {
         $this->createTime = $createTime;
-
-        return $this;
-    }
-
-    /**
-     * 取得Admin表的update_time欄位
-     *
-     * @return \DateTimeInterface
-     */
-    public function getUpdateTime(): ?\DateTimeInterface
-    {
-        return $this->updateTime;
-    }
-
-    /**
-     * 設定Admin表的update_time欄位
-     *
-     * @param \DateTimeInterface $updateTime
-     * @return self
-     */
-    public function setUpdateTime(?\DateTimeInterface $updateTime): self
-    {
-        $this->updateTime = $updateTime;
-
-        return $this;
-    }
-
-    /**
-     * 取得Admin表的status欄位
-     *
-     * @return int
-     */
-    public function getStatus(): ?int
-    {
-        return $this->status;
-    }
-
-    /**
-     * 設定Admin表的status欄位
-     *
-     * @param int $status
-     * @return self
-     */
-    public function setStatus(int $status): self
-    {
-        $this->status = $status;
 
         return $this;
     }

@@ -10,21 +10,12 @@ use App\Repository\RefundRepository;
  */
 class Refund
 {
-    const FAIL = 1;
-    const SUCCESS = 2;
-    const WAIT = 3;
-
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type = "integer")
      */
     private $id;
-
-    /**
-     * @ORM\Column(name = "trade_no", type = "string", length = 255, options = {"comment" = "交易訂單號"})
-     */
-    private $tradeNo;
 
     /**
      * @ORM\Column(name = "user_id", type = "integer", options = {"comment" = "創建者ID"})
@@ -42,34 +33,9 @@ class Refund
     private $amount;
 
     /**
-     * @ORM\Column(name = "before_balance", type = "float", options = {"comment" = "交易前餘額"})
-     */
-    private $beforeBalance;
-
-    /**
-     * @ORM\Column(name = "after_balance", type = "float", options = {"comment" = "交易後餘額"})
-     */
-    private $afterBalance;
-
-    /**
      * @ORM\Column(name = "create_time", type = "datetime", options = {"comment" = "創建時間"})
      */
     private $createTime;
-
-    /**
-     * @ORM\Column(name = "update_time", type = "datetime", nullable = true, options = {"comment" = "訂單更新時間"})
-     */
-    private $updateTime;
-
-    /**
-     * @ORM\Column(name = "status", type = "integer", options = {"comment" = "訂單狀態"})
-     */
-    private $status;
-
-    /**
-     * @ORM\Column(name = "remark", type = "string", length = 255, nullable = true, options = {"comment" = "備註"})
-     */
-    private $remark;
 
     public function __construct()
     {
@@ -95,29 +61,6 @@ class Refund
     public function setId(int $id): self
     {
         $this->id = $id;
-
-        return $this;
-    }
-
-    /**
-     * 取得Refund表的trade_no欄位
-     *
-     * @return string
-     */
-    public function getTradeNo(): ?string
-    {
-        return $this->tradeNo;
-    }
-
-    /**
-     * 設定Refund表的trade_no欄位
-     *
-     * @param string $tradeNo
-     * @return self
-     */
-    public function setTradeNo(string $tradeNo): self
-    {
-        $this->tradeNo = $tradeNo;
 
         return $this;
     }
@@ -192,52 +135,6 @@ class Refund
     }
 
     /**
-     * 取得Refund表的before_balance欄位
-     *
-     * @return float
-     */
-    public function getBeforeBalance(): ?float
-    {
-        return $this->beforeBalance;
-    }
-
-    /**
-     * 設定Refund表的before_balance欄位
-     *
-     * @param float $beforeBalance
-     * @return self
-     */
-    public function setBeforeBalance(float $beforeBalance): self
-    {
-        $this->beforeBalance = $beforeBalance;
-
-        return $this;
-    }
-
-    /**
-     * 取得Refund表的after_balance欄位
-     *
-     * @return float
-     */
-    public function getAfterBalance(): ?float
-    {
-        return $this->afterBalance;
-    }
-
-    /**
-     * 設定Refund表的after_balance欄位
-     *
-     * @param float $afterBalance
-     * @return self
-     */
-    public function setAfterBalance(float $afterBalance): self
-    {
-        $this->afterBalance = $afterBalance;
-
-        return $this;
-    }
-
-    /**
      * 取得Refund表的create_time欄位
      *
      * @return \DateTimeInterface
@@ -256,75 +153,6 @@ class Refund
     public function setCreateTime(\DateTimeInterface $createTime): self
     {
         $this->createTime = $createTime;
-
-        return $this;
-    }
-
-    /**
-     * 取得Refund表的update_time欄位
-     *
-     * @return \DateTimeInterface
-     */
-    public function getUpdateTime(): ?\DateTimeInterface
-    {
-        return $this->updateTime;
-    }
-
-    /**
-     * 設定Refund表的update_time欄位
-     *
-     * @param \DateTimeInterface $updateTime
-     * @return self
-     */
-    public function setUpdateTime(?\DateTimeInterface $updateTime): self
-    {
-        $this->updateTime = $updateTime;
-
-        return $this;
-    }
-
-    /**
-     * 取得Refund表的status欄位
-     *
-     * @return int
-     */
-    public function getStatus(): ?int
-    {
-        return $this->status;
-    }
-
-    /**
-     * 設定Refund表的status欄位
-     *
-     * @param int $status
-     * @return self
-     */
-    public function setStatus(int $status): self
-    {
-        $this->status = $status;
-
-        return $this;
-    }
-
-    /**
-     * 取得Refund表的remark欄位
-     *
-     * @return string
-     */
-    public function getRemark(): ?string
-    {
-        return $this->remark;
-    }
-
-    /**
-     * 設定Refund表的remark欄位
-     *
-     * @param string $remark
-     * @return self
-     */
-    public function setRemark(?string $remark): self
-    {
-        $this->remark = $remark;
 
         return $this;
     }

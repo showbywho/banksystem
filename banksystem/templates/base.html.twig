@@ -6,22 +6,15 @@
   <title>銀行系統後台</title>
   <title>{% block title %}{% endblock %}</title>
   {% block stylesheets %}
-            {#{{ encore_entry_link_tags('app') }}#}
+            {#"+ encore_entry_link_tags('app') +"#}
   {% endblock %}
 
   {% block javascripts %}
-      {#{{ encore_entry_script_tags('app') }}#}
+      {#"+ encore_entry_script_tags('app') +"#}
   {% endblock %}
 
-  {# <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback"> #}
-  {# <link rel="stylesheet" href="plugins/fontawesome-free/css/all.min.css"> #}
-  {# <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css"> #}
-  {# <link rel="stylesheet" href="plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css"> #}
-  {# <link rel="stylesheet" href="plugins/icheck-bootstrap/icheck-bootstrap.min.css"> #}
   <link rel="stylesheet" href="dist/css/adminlte.min.css">
   <link rel="stylesheet" href="plugins/overlayScrollbars/css/OverlayScrollbars.min.css">
-  {# <link rel="stylesheet" href="plugins/daterangepicker/daterangepicker.css"> #}
-  {# <link rel="stylesheet" href="plugins/summernote/summernote-bs4.min.css"> #}
   <script src="plugins/jquery/jquery.min.js"></script>
   <script src="plugins/jquery-ui/jquery-ui.min.js"></script>
 
@@ -41,10 +34,31 @@
       </li>
     </ul>
 
-    <!-- Right navbar links -->
     <ul class="navbar-nav ml-auto">
-      <!-- Navbar logout -->
-      <li class="nav-item">
+      <li class="nav-item" id="loginForm" {% if id %} style="display:none" {% endif %}>
+        <form id='quickForm'>
+          <div class='row'>
+            <div class='col-lg-5'>
+              <div class='input-group'>
+                <label for='account'>帳號</label>
+                <input type='text' name='text' class='form-control' id='account' placeholder='Enter account'>
+              </div>
+            </div>
+            <div class='col-lg-5'>
+              <div class='input-group'>
+                <label for='password'>密碼</label>
+                <input type='password' name='password' class='form-control' id='password' placeholder='Password'>
+              </div>
+            </div>
+              <div class='col-lg-2'>
+              <div class='input-group'>
+                <button type='submit' class='btn btn-primary'>送出</button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </li>
+      <li class="nav-item" id="logOutForm" {% if id == '' %} style="display:none" {% endif %}>
         <button type="button" id="logout" class="btn btn-block btn-danger btn-flat">登出</button>
       </li>
       <li class="nav-item">
@@ -59,30 +73,25 @@
       </li>
     </ul>
   </nav>
-  <!-- /.navbar -->
 
-  <!-- 左側選單主架構 -->
   <aside class="main-sidebar sidebar-dark-primary elevation-4">
-    <!-- Brand Logo -->
     <a class="brand-link">
       <img src="dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
       <span class="brand-text font-weight-light">BankSystem</span>
     </a>
 
-    <!-- Sidebar -->
     <div class="sidebar">
-      <!-- Sidebar user panel (optional) -->
       <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-        <div class="info">
-          <a href="#" class="d-block">歡迎 {{nick_name}}</a>
+        <div class="info" id="nickName">
+          <a href="#" class="d-block">
+            歡迎使用
+          </a>
         </div>
       </div>
 
       <!-- 左側選單 -->
       <nav class="mt-2">
         <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-          <!-- Add icons to the links using the .nav-icon class
-               with font-awesome or any other icon font library -->
           <li class="nav-item menu-open">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-tachometer-alt"></i>
@@ -93,39 +102,55 @@
             </a>
             <ul class="nav nav-treeview">
               <li class="nav-item">
-                <a href="./admin" class="nav-link">
+                <div class="nav-link" id="admin">
                   <i class="far fa-circle nav-icon"></i>
                   <p>使用者列表</p>
-                </a>
+                </div>
               </li>
               <li class="nav-item">
-                <a href="./incoming" class="nav-link">
+                <div class="nav-link" id="incoming">
                   <i class="far fa-circle nav-icon"></i>
                   <p>存款明細列表</p>
-                </a>
+                </div>
               </li>
               <li class="nav-item">
-                <a href="./refund" class="nav-link">
+                <div class="nav-link" id="refund">
                   <i class="far fa-circle nav-icon"></i>
                   <p>提現明細列表</p>
-                </a>
+                </div>
               </li>
             </ul>
           </li>
 
         </ul>
       </nav>
-      <!-- /.sidebar-menu -->
     </div>
-    <!-- /.sidebar -->
   </aside>
 
   <!-- 內容框-->
-<div class="content-wrapper">
-  {% block body %}{% endblock %}
-</div>
-
-  <!-- /.content-wrapper -->
+  <div class="content-wrapper" id ='content_data_bank'></div>
+  <div class='modal fade' id='modal-xl'>
+    <div class='modal-dialog modal-xl'>
+        <div class='modal-content'>
+        <div class='modal-header'>
+            <h4 class='modal-title' id='formTitle' data-path = ''>申請區</h4>
+            <button type='button' class='close' data-dismiss='modal' aria-label='Close'>
+            <span aria-hidden='true'>&times;</span>
+            </button>
+        </div>
+        <div class='modal-body'>
+            <div class='form-group'>
+                <label for='incoming_amount'>金額</label>
+                <input type='number' class='form-control' data-uid='' id='amount' placeholder='Enter number (ex: 100)'>
+            </div>
+        </div>
+        <div class='modal-footer justify-content-between'>
+            <button type='button' class='btn btn-default' data-dismiss='modal'>關閉</button>
+            <button id='formSubmit' type='button' data-dismiss='modal' class='btn btn-primary'>送出申請</button>
+        </div>
+        </div>
+    </div>
+  </div>
   <footer class="main-footer">
   </footer>
   <aside class="control-sidebar control-sidebar-dark">
@@ -134,37 +159,483 @@
 
 
 <script>
+$(function () {
+  $.validator.setDefaults({
+    submitHandler: function () {
+        var account = $("#account").val();
+        var password = $("#password").val();
+        var jsonData = {};
+        jsonData['account'] = account;
+        jsonData['password'] = password;
+        $.ajax({
+            type: 'POST',
+            url: './login',
+            dataType: 'json',
+            data: jsonData,
+            success: function (res) {
+                if(res.result=='error'){
+                    alert(res.msg);
+                }
 
-  $('#logout').click(function () {
-      $.ajax({
+                if(res.result=='ok'){
+                    alert('恭喜'+res.ret.nick_name+res.msg+'登入成功');
+                    var login = $('#loginForm');
+                    var logout = $('#logOutForm');
+                    var nickName = $('#nickName');
+                    nickName.show();
+                    logout.show();
+					          login.hide();
+                    $('#amount').data('uid',res.ret.id)
+                }
+            },
+            error: function (err) {
+                console.log(err)
+            }
+        });
+    }
+  });
+
+  $('#quickForm').validate({
+    rules: {
+      email: {
+        required: true,
+        email: true,
+      },
+      password: {
+        required: true,
+        minlength: 5
+      },
+    },
+    messages: {
+      email: {
+        required: "Please enter a email address",
+        email: "Please enter a vaild email address"
+      },
+      password: {
+        required: "Please provide a password",
+        minlength: "Your password must be at least 5 characters long"
+      },
+    },
+    errorElement: 'span',
+    errorPlacement: function (error, element) {
+      error.addClass('invalid-feedback');
+      element.closest('.form-group').append(error);
+    },
+    highlight: function (element, errorClass, validClass) {
+      $(element).addClass('is-invalid');
+    },
+    unhighlight: function (element, errorClass, validClass) {
+      $(element).removeClass('is-invalid');
+    }
+  });
+});
+
+$('#logOutForm').click(function () {
+    $.ajax({
+      type: 'GET',
+      url: './logout',
+      dataType: 'json',
+      success: function (res) {
+        if(res.result=='ok'){
+          alert(res.msg);
+          var login = $('#loginForm');
+          var logout = $('#logOutForm');
+          var nickName = $('#nickName');
+          var content = $("#content_data_bank");
+          nickName.hide();
+          login.show();
+          logout.hide();
+          content.empty();
+        }
+      },
+      error: function (err) {
+        console.log(err)
+      }
+    });
+});
+
+$("#admin").click(function(){
+    var content = $("#content_data_bank");
+    var jsonData = {};
+    var adminData = '';
+
+    $.ajax({
         type: 'GET',
-        url: './logout',
+        url: './admin',
         dataType: 'json',
         success: function (res) {
-          if(res.result=='ok'){
+          if(res.result === 'ok'){
+            adminData += "<section class='content-header'>";
+            adminData += "    <div class='container-fluid'>";
+            adminData += "    <div class='row mb-2'>";
+            adminData += "        <div class='col-sm-11'>";
+            adminData += "            <h1>使用者列表</h1>";
+            adminData += "        </div>";
+            adminData += "    </div>";
+            adminData += "    </div>";
+            adminData += "</section>";
+            adminData += "<section class='content'>";
+            adminData += "    <div class='row'>";
+            adminData += "        <div class='col-md-12'>";
+            adminData += "            <div class='card'>";
+            adminData += "                <div class='card-header'>";
+            adminData += "                    <h3 class='card-title'>使用者列表</h3>";
+            adminData += "                </div>";
+            adminData += "                <div class='card-body'>";
+            adminData += "                    <table class='table table-bordered'>";
+            adminData += "                        <thead>";
+            adminData += "                        <tr>";
+            adminData += "                            <th style='width: 10px'>編號</th>";
+            adminData += "                            <th>帳號</th>";
+            adminData += "                            <th>暱稱</th>";
+            adminData += "                            <th>餘額</th>";
+            adminData += "                            <th>總存款</th>";
+            adminData += "                            <th>總提現</th>";
+            adminData += "                            <th>帳號創建時間</th>";
+            adminData += "                        </tr>";
+            adminData += "                        </thead>";
+            adminData += "                        <tbody>";
+            adminData += "                            <tr>";
+            adminData += "                                <td>"+res.ret.user_data.id+"</td>";
+            adminData += "                                <td>"+res.ret.user_data.account+"</td>";
+            adminData += "                                <td>"+res.ret.user_data.nickName+"</td>";
+            adminData += "                                <td><span class='badge bg-danger'>"+res.ret.user_data.balance+"</span></td>";
+            adminData += "                                <td><span class='badge bg-success'>"+res.ret.user_data.totalDeposit+"</span></td>";
+            adminData += "                                <td><span class='badge bg-warning'>"+res.ret.user_data.totalRefund+"</span></td>";
+            adminData += "                                <td>"+res.ret.user_data.createTime.date+"</td>";
+            adminData += "                            </tr>";
+            adminData += "                        </tbody>";
+            adminData += "                    </table>";
+            adminData += "                </div>";
+            adminData += "        </div>";
+            adminData += "    </div>";
+            adminData += "</section>";
+            content.empty().append(adminData);
+          }else{
             alert(res.msg);
-            window.location.href = "{{ path('login') }}"
           }
         },
         error: function (err) {
-          console.log(err)
+            console.log(err)
         }
-      });
-  });
+    });
+});
 
+$("#incoming").click(function(){
+    var content = $("#content_data_bank");
+    var jsonData = {};
+    var incomingData = '';
+    var formTitle = $("#formTitle");
+    $.ajax({
+        type: 'GET',
+        url: './incoming',
+        dataType: 'json',
+        success: function (res) {
+          if(res.result === 'ok'){
+            console.log(res);
+            formTitle.html('存款申請區');
+            formTitle.data('path','redisIncoming');
+            incomingData += "<section class='content-header'>";
+            incomingData += "    <div class='container-fluid'>";
+            incomingData += "    <div class='row mb-2'>";
+            incomingData += "        <div class='col-sm-11'>";
+            incomingData += "            <h1>存款明細列表</h1>";
+            incomingData += "        </div>";
+            incomingData += "        <div class='col-sm-1'>";
+            incomingData += "          <button type='button' class='btn btn-default' data-toggle='modal' data-target='#modal-xl'>";
+            incomingData += "                存款申請";
+            incomingData += "            </button>";
+            incomingData += "        </div>";
+            incomingData += "    </div>";
+            incomingData += "    </div>";
+            incomingData += "</section>";
+            incomingData += "<section class='content'>";
+            incomingData += "    <div class='row'>";
+            incomingData += "        <div class='col-md-12'>";
+            incomingData += "            <div class='card'>";
+            incomingData += "                <div class='card-header'>";
+            incomingData += "                    <h3 class='card-title'>存款明細列表</h3>";
+            incomingData += "                </div>";
+            incomingData += "                <div class='card-body'>";
+            incomingData += "                    <table class='table table-bordered'>";
+            incomingData += "                        <thead>";
+            incomingData += "                        <tr>";
+            incomingData += "                            <th style='width: 10px'>編號</th>";
+            incomingData += "                            <th>使用者ID</th>";
+            incomingData += "                            <th>申請者暱稱</th>";
+            incomingData += "                            <th>存款金額</th>";
+            incomingData += "                            <th>交易創建時間</th>";
+            incomingData += "                        </tr>";
+            incomingData += "                        </thead>";
+            incomingData += "                        <tbody>";
 
+            $.each(res.ret.incoming_data, function(key, list) {
+              incomingData += "                        <tr>";
+              incomingData += "                            <td>"+list.id+"</td>";
+              incomingData += "                            <td>"+list.userId+"</td>";
+              incomingData += "                            <td>"+list.userName+"</td>";
+              incomingData += "                            <td><span class='badge bg-danger'>"+list.amount+"</span></td>";
+              incomingData += "                            <td>"+list.createTime.date+"</td>";
+              incomingData += "                        </tr>";
+            });
 
+            incomingData += "                        </tbody>";
+            incomingData += "                    </table>";
+            incomingData += "                </div>";
+            incomingData += "        </div>";
+            incomingData += "    </div>";
+            incomingData += "</section>";
+            content.empty().append(incomingData);
+          }else{
+            alert(res.msg);
+          }
+        },
+        error: function (err) {
+            console.log(err)
+        }
+    });
+});
 
+$("#refund").click(function(){
+    var content = $("#content_data_bank");
+    var jsonData = {};
+    var refundData = '';
+    var formTitle = $("#formTitle");
+
+    $.ajax({
+        type: 'GET',
+        url: './refund',
+        dataType: 'json',
+        success: function (res) {
+          formTitle.html('提現申請區');
+          formTitle.data('path','redisRefund');
+          if(res.result === 'ok'){
+            refundData += "<section class='content-header'>";
+            refundData += "    <div class='container-fluid'>";
+            refundData += "    <div class='row mb-2'>";
+            refundData += "        <div class='col-sm-11'>";
+            refundData += "            <h1>提現明細列表</h1>";
+            refundData += "        </div>";
+            refundData += "        <div class='col-sm-1'>";
+            refundData += "           <button type='button' class='btn btn-default' data-toggle='modal' data-target='#modal-xl'>";
+            refundData += "                 提現申請";
+            refundData += "            </button>";
+            refundData += "        </div>";
+            refundData += "    </div>";
+            refundData += "    </div>";
+            refundData += "</section>";
+            refundData += "<section class='content'>";
+            refundData += "    <div class='row'>";
+            refundData += "        <div class='col-md-12'>";
+            refundData += "            <div class='card'>";
+            refundData += "                <div class='card-header'>";
+            refundData += "                    <h3 class='card-title'>提現明細列表</h3>";
+            refundData += "                </div>";
+            refundData += "                <div class='card-body'>";
+            refundData += "                    <table class='table table-bordered'>";
+            refundData += "                        <thead>";
+            refundData += "                        <tr>";
+            refundData += "                            <th style='width: 10px'>編號</th>";
+            refundData += "                            <th>使用者ID</th>";
+            refundData += "                            <th>申請者暱稱</th>";
+            refundData += "                            <th>提現金額</th>";
+            refundData += "                            <th>交易創建時間</th>";
+            refundData += "                        </tr>";
+            refundData += "                        </thead>";
+            refundData += "                        <tbody>";
+            $.each(res.ret.refund_data, function(key, list) {
+              refundData += "                        <tr>";
+              refundData += "                            <td>"+list.id+"</td>";
+              refundData += "                            <td>"+list.userId+"</td>";
+              refundData += "                            <td>"+list.userName+"</td>";
+              refundData += "                            <td><span class='badge bg-danger'>"+list.amount+"</span></td>";
+              refundData += "                            <td>"+list.createTime.date+"</td>";
+              refundData += "                        </tr>";
+            });
+            refundData += "                        </tbody>";
+            refundData += "                    </table>";
+            refundData += "                </div>";
+            refundData += "            </div>";
+            refundData += "        </div>";
+            refundData += "    </div>";
+            refundData += "</section>";
+            content.empty().append(refundData);
+          }else{
+            alert(res.msg);
+          }
+        },
+        error: function (err) {
+            console.log(err)
+        }
+    });
+});
+
+$('#formSubmit').click(function () {
+    var amount = $("#amount").val();
+    var jsonData = {};
+    jsonData['amount'] = amount;
+    var path = $("#formTitle").data('path');
+    $.ajax({
+        type: 'POST',
+        url: './'+path,
+        dataType: 'json',
+        data: jsonData,
+        success: function (res) {
+          console.log(res);
+            if (res.result=='error'){
+                alert(res.msg);
+            }else{
+                alert(res.msg+'餘額尚有'+res.ret.balance+'元');
+            }
+        },
+        error: function (err) {
+            console.log(err)
+        }
+    });
+});
   $.widget.bridge('uibutton', $.ui.button)
 </script>
+<script src="../../plugins/jquery/jquery.min.js"></script>
+<script src="../../plugins/jquery-validation/jquery.validate.min.js"></script>
+<script src="../../plugins/jquery-validation/additional-methods.min.js"></script>
 <script src="plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-{# <script src="plugins/chart.js/Chart.min.js"></script> #}
-{# <script src="plugins/sparklines/sparkline.js"></script> #}
 <script src="plugins/moment/moment.min.js"></script>
-{# <script src="plugins/daterangepicker/daterangepicker.js"></script> #}
 <script src="plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
-{# <script src="plugins/summernote/summernote-bs4.min.js"></script> #}
 <script src="plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
+<script src="../../dist/js/adminlte.min.js"></script>
 <script src="dist/js/adminlte.js"></script>
+
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

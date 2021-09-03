@@ -2,8 +2,6 @@
 
 namespace App\Command;
 
-use App\Entity\Admin;
-use App\Entity\Incoming;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -67,64 +65,30 @@ class TimerCommand extends Command
                     $userId = $redisOrderData['user_id'];
                     $amount = $redisOrderData['amount'];
                     $way = $redisOrderData['way'];
-                    $orderId = $redisOrderData['order_id'];
+                    $admin = $this->em->find('App\Entity\Admin', $userId);
 
-                    if ($way === 'plus') {
-                        $incoming = $this->em
-                            ->getRepository('App\Entity\Incoming')
-                            ->findOneBy([
-                                'id' => $orderId,
-                                'amount' => $amount,
-                            ]);
+                    if ($way === 'plus' && $admin) {
+                        $version = $admin->getVersion();
+                        $this->em->lock(
+                            $admin,
+                            LockMode::OPTIMISTIC,
+                            $version,
+                        );
 
-                        if ($incoming) {
-                            $incoming->setStatus(Admin::SUCCESS);
-                            $admin = $this->em->find('App\Entity\Admin', $userId);
-
-                            if ($admin) {
-                                $version = $admin->getVersion();
-                                $this->em->lock(
-                                    $admin,
-                                    LockMode::OPTIMISTIC,
-                                    $version,
-                                );
-                                $admin->plusBalance($amount);
-                                $admin->plusTotalDeposit($amount);
-                            }
-                        }
-
-                        if (!$incoming) {
-                            $redis->lpush('error_order_data', $rangeOrderData[$key]);
-                        }
+                        $admin->plusBalance($amount);
+                        $admin->plusTotalDeposit($amount);
                     }
 
-                    if ($way === 'minus') {
-                        $refund = $this->em
-                            ->getRepository('App\Entity\Refund')
-                            ->findOneBy([
-                                'id' => $orderId,
-                                'amount' => $amount,
-                            ]);
+                    if ($way === 'minus' && $admin) {
+                        $version = $admin->getVersion();
+                        $this->em->lock(
+                            $admin,
+                            LockMode::OPTIMISTIC,
+                            $version,
+                        );
 
-                        if ($refund) {
-                            $refund->setStatus(Admin::SUCCESS);
-                            $admin = $this->em->find('App\Entity\Admin', $userId);
-
-                            if ($admin) {
-                                $version = $admin->getVersion();
-                                $this->em->lock(
-                                    $admin,
-                                    LockMode::OPTIMISTIC,
-                                    $version,
-                                );
-                                $admin->minusBalance($amount);
-                                $admin->minusTotalRefund($amount);
-                            }
-                        }
-
-                        if (!$refund) {
-                            $redis->lpush('error_order_data', $rangeOrderData[$key]);
-                        }
+                        $admin->minusBalance($amount);
+                        $admin->minusTotalRefund($amount);
                     }
                 }
 
